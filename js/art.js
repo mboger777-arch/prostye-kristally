@@ -4,23 +4,23 @@ const UA={};function ua(n){const i=new Image();i.src='assets/ui/'+n+'.png';UA[n]
 ['btn_purple','btn_teal','btn_round','scroll_banner','star','sign','frame','logo','win_dialog','win_hint','win_victory','win_mistake','bubble','node',
  'gem_purple','gem_teal','gem_amber','gem_broken','cart','pickaxe','heart','heart_grey','tile','tile_water','lock','plank','tex_gold','tex_steel'].forEach(ua);
 const SHARDS=[],SPL=[];for(let i=0;i<15;i++)SHARDS.push(ua('p_shards'+i));for(let i=0;i<7;i++)SPL.push(ua('p_splash'+i));
-const VIS={};['granit','iskorka','shester','troll'].forEach(w=>{VIS[w]=[0,1,2,3,4].map(i=>ua('v_'+w+i))});
+const VIS={};['granit','iskorka','shester','troll'].forEach(w=>{VIS[w]=(w==='troll'?[0,1,2,3,4,5,6]:[0,1,2,3,4,5]).map(i=>ua('v_'+w+i))});
 const BODY2={shester:ua('../sprites/shester_body')};
-const HF={granit:[.333,-.0094,.6144,.408],iskorka:[.0963,.1541,.6862,.3814],shester:[-.0409,-.0826,.8664,.6534],troll:[.4677,-.0177,.3096,.4668]};
+const HF={"granit": [0.3241, -0.0196, 0.6213, 0.4439], "iskorka": [0.0786, 0.146, 0.6717, 0.4247], "shester": [-0.0409, -0.0826, 0.8664, 0.6534], "troll": [0.4677, -0.0177, 0.3096, 0.4668]};
 const okI=i=>i&&i.complete&&i.naturalWidth>0;
 // серые варианты (заблокировано/не горит) — из той же картинки
 const GREY={};function grey(n){if(GREY[n])return GREY[n];const i=UA[n];if(!okI(i))return null;const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const g=c.getContext('2d');g.drawImage(i,0,0);
  const d=g.getImageData(0,0,c.width,c.height),p=d.data;for(let k=0;k<p.length;k+=4){const l=(p[k]*.3+p[k+1]*.55+p[k+2]*.15)*.62+18;p[k]=l*.92;p[k+1]=l*.9;p[k+2]=l*1.08}g.putImageData(d,0,0);return GREY[n]=c}
 function dimg(n,x,y,w,h,o){o=o||{};const i=o.grey?grey(n):UA[n];if(!i||(i.complete===false)||(i.naturalWidth===0))return;X.drawImage(i,x,y,w,h)}
 // 9-slice: l,t,r,b — доли исходника; углы масштабируются одинаково, середина тянется
-function nine(n,x,y,w,h,l,t,r,b,flip){const i=UA[n];if(!okI(i))return;const iw=i.naturalWidth,ih=i.naturalHeight;const k=Math.min(w/iw,h/ih,1.6);
+function nine(n,x,y,w,h,l,t,r,b,flip,cap){const i=UA[n];if(!okI(i))return;const iw=i.naturalWidth,ih=i.naturalHeight;const k=Math.min(w/iw,h/ih,cap||1.6);
  const sx=[0,l*iw,iw-r*iw,iw],sy=[0,t*ih,ih-b*ih,ih],dx=[0,l*iw*k,w-r*iw*k,w],dy=[0,t*ih*k,h-b*ih*k,h];
  X.save();X.translate(x,y);if(flip){X.translate(w,0);X.scale(-1,1)}
  for(let a=0;a<3;a++)for(let c=0;c<3;c++){const sw=sx[c+1]-sx[c],sh=sy[a+1]-sy[a],ddw=dx[c+1]-dx[c],ddh=dy[a+1]-dy[a];if(sw>0&&sh>0&&ddw>0&&ddh>0)X.drawImage(i,sx[c],sy[a],sw,sh,dx[c]-.5,dy[a]-.5,ddw+1,ddh+1)}
  X.restore()}
-const SL={win_dialog:[.24,.3,.24,.3],win_mistake:[.2,.27,.2,.27],win_victory:[.27,.5,.27,.2],win_hint:[.2,.12,.2,.36],bubble:[.26,.3,.26,.4],frame:[.16,.25,.16,.25],
+const SL={win_dialog:[.24,.3,.24,.3],win_mistake:[.2,.27,.2,.27],win_victory:[.27,.5,.27,.2],win_hint:[.2,.12,.2,.36],bubble:[.26,.3,.26,.4],frame:[.16,.25,.16,.25,.75],
  btn_purple:[.12,.3,.12,.3],btn_teal:[.12,.3,.12,.3],scroll_banner:[.2,.22,.2,.22],sign:[.16,.3,.16,.3]};
-function win(n,x,y,w,h,flip){const s=SL[n];nine(n,x,y,w,h,s[0],s[1],s[2],s[3],flip)}
+function win(n,x,y,w,h,flip){const s=SL[n];nine(n,x,y,w,h,s[0],s[1],s[2],s[3],flip,s[4])}
 // ---- текст: сказочный шрифт, обводка, тень, градиент ----
 function hx(c){if(typeof c!=='string'||c[0]!=='#')return null;if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]}
 function mix(a,b,k){return`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*k)).join(',')})`}
@@ -98,8 +98,9 @@ function visFor(c){if(c.forceV!=null)return c.forceV;const talking=talk&&talk.wh
   v.env=v.env*.6+a*.4;let tgt=v.env<.1?0:v.env<.28?1:v.env<.55?(Math.floor(T*4.3+c.x)%3===0?3:1):2;
   if(c.n==='troll'&&tgt===2&&Math.floor(T*3)%2)tgt=4;
   if(T-v.t>.085&&tgt!==v.f){v.f=tgt;v.t=T}return v.f}
- if(c.n==='troll'){if(c.mood==='laugh'&&T-c.moodT<1.6)return Math.floor(T*7)%2?4:2;if(c.wob&&T-c.wob<1)return 3;if(c.hit&&T-c.hit<1)return 3;if(c.mood==='angry'&&T-c.moodT<2)return 0;return 0}
+ if(c.n==='troll'){if(c.mood==='laugh'&&T-c.moodT<1.6)return Math.floor(T*7)%2?4:2;if(c.wob&&T-c.wob<1)return 3;if(c.hit&&T-c.hit<1)return 3;if(c.mood==='angry'&&T-c.moodT<2)return 6;return 0}
  if(c.wob&&T-c.wob<1.2)return 3;if(c.jump&&T-c.jump<1.2)return 4;if(c.mood==='happy'&&T-c.moodT<2)return 4;return 0}
+function blinkOn(c){if(c.forceV!=null)return false;if(!c.blN){c.blN=T+rnd(1,4);c.bl2=0}if(T>c.blN+.12){if(!c.bl2&&Math.random()<.25){c.bl2=1;c.blN=T+.12}else{c.bl2=0;c.blN=T+rnd(2.5,5)}}return T>=c.blN&&T<c.blN+.12}
 function drawHero(c){const im=IM[c.n],R=RIG[c.n];if(!okI(im))return;const ph=c.x*.013;const talking=talk&&talk.who===c.n;
  if(!c.fidT)c.fidT=T+rnd(3,7);if(T>c.fidT&&!c.fid){c.fid={granit:'axe',iskorka:Math.random()<.5?'tail':'wing',shester:'key',troll:'stomp'}[c.n];c.fid0=T}
  if(c.fid){c.fidK=(T-c.fid0)/1.2;if(c.fid==='stomp'&&!c.stomped&&c.fidK>.5){c.stomped=1;if(scene==='l5'||scene==='intro'){shake=Math.max(shake,7);SFX.hit();burst(c.x,c.y,14,'shard',35,.5)}}if(c.fidK>=1){c.fid=null;c.stomped=0;c.fidT=T+rnd(4,8)}}
@@ -121,7 +122,7 @@ function drawHero(c){const im=IM[c.n],R=RIG[c.n];if(!okI(im))return;const ph=c.x
  R.parts.forEach(p=>drawPart(body,w,h,p.r,p.p,p.f?p.f(T+ph,c):0,p.sx?p.sx(T+ph,c):null));
  X.save();const hp=R.head.p;X.translate(hp[0]*w,hp[1]*h);X.rotate(headA);X.translate(-hp[0]*w,-hp[1]*h);
  X.save();X.beginPath();const hr=R.head.r;X.rect(hr[0]*w-1,hr[1]*h-1,(hr[2]-hr[0])*w+2,(hr[3]-hr[1])*h+2);X.clip();X.drawImage(body,0,0,w,h);X.restore();
- const f=HF[c.n],v=VIS[c.n][visFor(c)];if(okI(v))X.drawImage(v,f[0]*w,f[1]*h,f[2]*w,f[3]*h);
+ let vf=visFor(c);if(blinkOn(c)&&vf===0)vf=5;const f=HF[c.n],v=VIS[c.n][vf];if(okI(v))X.drawImage(v,f[0]*w,f[1]*h,f[2]*w,f[3]*h);
  X.restore();X.restore();
  if(puz>0&&c.n!=='troll'){const hx2=c.x+(c.flip?-1:1)*(R.head.p[0]-.5)*w,hy=c.y-h*1.02+dy;txt('?',hx2+Math.sin(T*6)*4,hy-10*Math.sin(puz*3),44*Math.min(1,puz*3),'#ffe066')}
  if(c.mood==='laugh'&&T-c.moodT<1.5)txt('Ха-ха!',c.x,c.y-h*1.05,40,'#c8ff9a')}

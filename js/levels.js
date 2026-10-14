@@ -29,7 +29,7 @@ SC.map={enter(){cast=[{n:'iskorka',x:110,y:715,h:200}];if(!SV.seenMap){SV.seenMa
   const sc=SV.secret.reduce((a,b)=>a+b,0);win('sign',900,150,330,62);gem(1195,181,17,300,'',{glow:1});txt('Редкие кристаллы: '+sc+' из 4',1040,182,24,'#ffe9b8',{st:'#2a1406',lw:4});drawCast()},
  tap(x,y){MP.forEach((p,i)=>{if(Math.hypot(x-p[0],y-p[1])<70){if(i<SV.open){SFX.click();go('l'+(i+1))}else{SFX.bad();oops('iskorka')}}})}};
 // ---------- общая рамка уровня ----------
-const SECRET_POS=[[1215,250],[95,215],[1200,560],[70,330]];
+const SECRET_POS=[[1215,250],[95,215],[1235,330],[70,330]];
 const DEF={};
 function levelScene(n){SC['l'+n]={enter(){if(LV&&LV.n===n&&LV.resume){LV.resume=false;cast=LV.cast;return}
   LV={n,r:0,mist:0,streak:0,done:false,banner:null,msg:null,def:DEF[n]};DEF[n].init(LV);cast=LV.cast;run(()=>DEF[n].start(LV))},
@@ -115,19 +115,19 @@ function ans2(L,guess){if(G.busy||L.done||L.phase!=='ask')return;const pr=isP(L.
  if(!await roundDone())next2(L)})}
 levelScene(2);
 // ---------- УРОВЕНЬ 3: решето Эратосфена ----------
-const STEPS3=[1,2,3,5,7],SK3=['l3s1','l3s2','l3s3','l3s5','l3s7'],CX3=430,CY3=84,CW3=46,CH3=38;
+const STEPS3=[1,2,3,5,7],SK3=['l3s1','l3s2','l3s3','l3s5','l3s7'],CX3=180,CY3=104,CW3=92,CH3=56;
 function cell3(n){const i=n-1;return{x:CX3+(i%10)*CW3+CW3/2,y:CY3+Math.floor(i/10)*CH3+CH3/2}}
-DEF[3]={init(L){L.cast=[{n:'iskorka',x:150,y:712,h:250},{n:'granit',x:1150,y:712,h:250,flip:1}];L.st=new Array(101).fill(0);L.wt={};L.bad={};L.cnt=0},
+DEF[3]={init(L){L.cast=[{n:'iskorka',x:88,y:715,h:175},{n:'granit',x:1195,y:715,h:180,flip:1}];L.st=new Array(101).fill(0);L.wt={};L.bad={};L.cnt=0},
  async start(L){await say('l3i');await say(SK3[0])},
- draw(L){win('frame',CX3-40,CY3-34,CW3*10+80,CH3*10+68);
+ draw(L){win('frame',CX3-32,CY3-28,CW3*10+64,CH3*10+56);
   for(let n=1;n<=100;n++){const{x,y}=cell3(n),s=L.st[n];const hl=L.hintN===n&&T-L.hintT<5;
    if(s!==2){const sh=L.bad[n]&&T-L.bad[n]<.6?Math.sin(T*60)*3:0;if(s===3){const k=clamp((T-(L.wt[n]||0))*2.5,0,1);dimg('tile',x-CW3/2+sh,y-CH3/2-1,CW3,CH3+2);X.save();X.globalAlpha=k;dimg('tile_water',x-CW3/2,y-CH3/2-1,CW3,CH3+2);X.restore()}else dimg('tile',x-CW3/2+sh,y-CH3/2-1,CW3,CH3+2,{grey:s===1})}
-   if(s===2){gem(x,y,17,[45,190,300,150,20][n%5],n,{fs:n>9?15:18,glow:1.1});continue}
-   let a=1,col='#4a2c12',dy=0;if(s===3){const k=clamp((T-(L.wt[n]||0))*2.5,0,1);a=1-.72*k;dy=k*4;col='#2a6c90'}if(s===1)col='#777';
+   if(s===2){gem(x,y,25,[45,190,300,150,20][n%5],n,{fs:n>99?24:30,glow:1.1});continue}
+   let a=1,col='#4a2c12',dy=0;if(s===3){const k=clamp((T-(L.wt[n]||0))*2.5,0,1);a=1-.45*k;dy=k*2;col='#2a6c90'}if(s===1)col='#777';
    if(L.bad[n]&&T-L.bad[n]<.6){col='#d02020';x+Math.sin(T*50)*3}
-   X.globalAlpha=s===3?a+.15:1;const bd=L.bad[n]&&T-L.bad[n]<.6;txt(String(n),x+(bd?Math.sin(T*60)*3:0),y+dy,22,hl?'#fff6b0':bd?'#ff9a9a':s===3?'#d8f4ff':s===1?'#b8b8c0':'#fff1d0',{st:hl?'#a05a00':s===3?'#0a3a5a':'#2a1406',lw:hl?6:4});X.globalAlpha=1}
-  if(L.wash){win('scroll_banner',435,520,440,70);txt('Смываем числа, кратные '+L.wash,655,555,28,'#0a3a5a',{st:'rgba(230,250,255,.85)',lw:4})}
-  if(L.cnt){win('sign',470,600,370,74);txt('Простых чисел: '+L.cnt,655,637,36,'#fff3b0',{st:'#2a1406',lw:5})}},
+   X.globalAlpha=s===3?a+.15:1;const bd=L.bad[n]&&T-L.bad[n]<.6;txt(String(n),x+(bd?Math.sin(T*60)*3:0),y+dy,34,hl?'#fff6b0':bd?'#ff9a9a':s===3?'#d8f4ff':s===1?'#b8b8c0':'#fff1d0',{st:hl?'#a05a00':s===3?'#0a3a5a':'#2a1406',lw:hl?6:4});X.globalAlpha=1}
+  if(L.wash){win('scroll_banner',420,652,440,66);txt('Смываем числа, кратные '+L.wash,640,686,28,'#0a3a5a',{st:'rgba(230,250,255,.85)',lw:4})}
+  if(L.cnt){win('sign',455,650,370,68);txt('Простых чисел: '+L.cnt,640,684,36,'#fff3b0',{st:'#2a1406',lw:5})}},
  tap(L,x,y){const c=Math.floor((x-CX3)/CW3),r=Math.floor((y-CY3)/CH3);if(c<0||c>9||r<0||r>9)return;tap3(L,r*10+c+1)},
  async hint(L){L.hintN=STEPS3[L.r];L.hintT=T;await say(SK3[L.r])},
  wrong(L){tap3(L,4)},
@@ -137,7 +137,7 @@ function tap3(L,n){if(G.busy||L.done)return;const ex=STEPS3[L.r];run(async()=>{
  if(n!==ex){L.mist++;L.bad[n]=T;SFX.bad();oops('iskorka');const s=L.st[n],f=fac(n);let m;
   if(ex===1)m='Сначала нажми на число 1.';else if(s===3)m=n+' уже смыто: '+n+' = '+f[0]+' × '+(n/f[0])+'.';else if(s===2)m=n+' уже обведено — оно простое.';else if(n===1)m='1 — ни простое, ни составное.';
   else if(!isP(n))m=n+' = '+f[0]+' × '+(n/f[0])+' — составное, его смоет вода.';else m=n+' простое, но сначала самое маленькое: '+ex+'.';
-  banner(m,'#ffd0d0',560);await say('l3w');return}
+  banner(m,'#ffd0d0',600);await say('l3w');return}
  L.banner=null;SFX.ok();const{x,y}=cell3(n);burst(x,y,26,'spark',50);
  if(n===1){L.st[1]=1;await say('l3one')}else{L.st[n]=2;L.wash=n;await wait(300);let i=0;
   for(let m=2*n;m<=100;m+=n){if(L.st[m]===0){L.st[m]=3;L.wt[m]=T;const c=cell3(m);drops(c.x,c.y,7);if(i++%3===0)SFX.splash();await wait(G.fast?0:80)}}
