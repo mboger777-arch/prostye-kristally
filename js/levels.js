@@ -29,13 +29,14 @@ SC.map={enter(){cast=[{n:'iskorka',x:110,y:715,h:200}];if(!SV.seenMap){SV.seenMa
   const sc=SV.secret.reduce((a,b)=>a+b,0);win('sign',900,150,330,62);gem(1195,181,17,300,'',{glow:1});txt('Редкие кристаллы: '+sc+' из 4',1040,182,24,'#ffe9b8',{st:'#2a1406',lw:4});drawCast()},
  tap(x,y){MP.forEach((p,i)=>{if(Math.hypot(x-p[0],y-p[1])<70){if(i<SV.open){SFX.click();go('l'+(i+1))}else{SFX.bad();oops('iskorka')}}})}};
 // ---------- общая рамка уровня ----------
-const SECRET_POS=[[1215,250],[95,215],[1235,330],[70,330]];
+const SECRET_POS=[[1215,250],[95,215],[1240,560],[70,330]];
 const DEF={};
 function levelScene(n){SC['l'+n]={enter(){if(LV&&LV.n===n&&LV.resume){LV.resume=false;cast=LV.cast;return}
   LV={n,r:0,mist:0,streak:0,done:false,banner:null,msg:null,def:DEF[n]};DEF[n].init(LV);cast=LV.cast;run(()=>DEF[n].start(LV))},
  draw(){bgDraw('l'+n,0,LV.scroll);motes([190,300,180,40,110][n-1]);DEF[n].draw(LV);drawCast();if(DEF[n].over)DEF[n].over(LV);
   if(n<5&&!SV.secret[n-1]&&!LV.done){const[sx,sy]=SECRET_POS[n-1];gem(sx,sy,11,320,'',{alpha:.45+.35*Math.sin(T*3),glow:.8+.4*Math.sin(T*3)})}
-  if(LV.banner){const b=LV.banner;X.font='27px '+FONT;const bad=/ffd0d0|ffb0b0/.test(b.col||'');const L=wrap(b.t,700),w=Math.max(...L.map(l=>X.measureText(l).width))+(bad?120:150),h=L.length*36+(bad?84:70),y=Math.min(b.y||96,712-h);
+  if(LV.banner&&n===3){const b=LV.banner;X.font='24px '+FONT;const L=wrap(b.t,230),h=L.length*30+80,y=Math.min(712-h,Math.max(300,talk&&talk.box?talk.box[1]+talk.box[3]+6:0));X.globalAlpha=ease((T-b.t0)*4);win('win_mistake',962,y,312,h);L.forEach((l,i)=>txt(l,1118,y+h/2-(L.length-1)*15+i*30,24,'#ffe0d8',{lw:4}));X.globalAlpha=1}
+  else if(LV.banner){const b=LV.banner;X.font='27px '+FONT;const bad=/ffd0d0|ffb0b0/.test(b.col||'');const L=wrap(b.t,700),w=Math.max(...L.map(l=>X.measureText(l).width))+(bad?120:150),h=L.length*36+(bad?84:70),y=Math.min(b.y||96,712-h);
    X.globalAlpha=ease((T-b.t0)*4);if(bad){win('win_mistake',640-w/2,y,w,h);L.forEach((l,i)=>txt(l,640,y+h/2-(L.length-1)*18+i*36,27,'#ffe0d8',{lw:5}))}else{win('scroll_banner',640-w/2,y,w,h);L.forEach((l,i)=>txt(l,640,y+h/2-(L.length-1)*18+i*36,27,'#4a2208',{st:'rgba(255,245,215,.8)',lw:4}))}X.globalAlpha=1}},
  ui(){win('scroll_banner',470,0,340,62);txt(LNAMES[n-1],640,30,30,'#6a3410',{st:'rgba(255,245,215,.85)',lw:4});for(let i=0;i<ROUNDS[n-1];i++)gem(640-(ROUNDS[n-1]-1)*16+i*32,78,11,i<LV.r?45:250,'',{grey:i>=LV.r,glow:i<LV.r?1:0});
   btn('home',60,46,84,60,'⌂',()=>{go('map')},{always:1,hue:260,fs:36});if(!LV.done)btn('hint',1220,46,84,60,'?',()=>{if(!G.busy)run(()=>DEF[n].hint(LV))},{hue:50,fs:38});
@@ -115,9 +116,9 @@ function ans2(L,guess){if(G.busy||L.done||L.phase!=='ask')return;const pr=isP(L.
  if(!await roundDone())next2(L)})}
 levelScene(2);
 // ---------- УРОВЕНЬ 3: решето Эратосфена ----------
-const STEPS3=[1,2,3,5,7],SK3=['l3s1','l3s2','l3s3','l3s5','l3s7'],CX3=180,CY3=104,CW3=92,CH3=56;
+const STEPS3=[1,2,3,5,7],SK3=['l3s1','l3s2','l3s3','l3s5','l3s7'],CX3=150,CY3=104,CW3=78,CH3=56;
 function cell3(n){const i=n-1;return{x:CX3+(i%10)*CW3+CW3/2,y:CY3+Math.floor(i/10)*CH3+CH3/2}}
-DEF[3]={init(L){L.cast=[{n:'iskorka',x:88,y:715,h:175},{n:'granit',x:1195,y:715,h:180,flip:1}];L.st=new Array(101).fill(0);L.wt={};L.bad={};L.cnt=0},
+DEF[3]={init(L){L.cast=[{n:'iskorka',x:62,y:715,h:150},{n:'granit',x:1200,y:715,h:175,flip:1}];L.st=new Array(101).fill(0);L.wt={};L.bad={};L.cnt=0},
  async start(L){await say('l3i');await say(SK3[0])},
  draw(L){win('frame',CX3-32,CY3-28,CW3*10+64,CH3*10+56);
   for(let n=1;n<=100;n++){const{x,y}=cell3(n),s=L.st[n];const hl=L.hintN===n&&T-L.hintT<5;
@@ -126,8 +127,8 @@ DEF[3]={init(L){L.cast=[{n:'iskorka',x:88,y:715,h:175},{n:'granit',x:1195,y:715,
    let a=1,col='#4a2c12',dy=0;if(s===3){const k=clamp((T-(L.wt[n]||0))*2.5,0,1);a=1-.45*k;dy=k*2;col='#2a6c90'}if(s===1)col='#777';
    if(L.bad[n]&&T-L.bad[n]<.6){col='#d02020';x+Math.sin(T*50)*3}
    X.globalAlpha=s===3?a+.15:1;const bd=L.bad[n]&&T-L.bad[n]<.6;txt(String(n),x+(bd?Math.sin(T*60)*3:0),y+dy,34,hl?'#fff6b0':bd?'#ff9a9a':s===3?'#d8f4ff':s===1?'#b8b8c0':'#fff1d0',{st:hl?'#a05a00':s===3?'#0a3a5a':'#2a1406',lw:hl?6:4});X.globalAlpha=1}
-  if(L.wash){win('scroll_banner',420,652,440,66);txt('Смываем числа, кратные '+L.wash,640,686,28,'#0a3a5a',{st:'rgba(230,250,255,.85)',lw:4})}
-  if(L.cnt){win('sign',455,650,370,68);txt('Простых чисел: '+L.cnt,640,684,36,'#fff3b0',{st:'#2a1406',lw:5})}},
+  if(L.wash){win('scroll_banner',962,420,312,92);txt('Смываем кратные '+L.wash,1118,466,26,'#0a3a5a',{st:'rgba(230,250,255,.85)',lw:4})}
+  if(L.cnt){win('sign',962,440,312,80);txt('Простых чисел: '+L.cnt,1118,480,32,'#fff3b0',{st:'#2a1406',lw:5})}},
  tap(L,x,y){const c=Math.floor((x-CX3)/CW3),r=Math.floor((y-CY3)/CH3);if(c<0||c>9||r<0||r>9)return;tap3(L,r*10+c+1)},
  async hint(L){L.hintN=STEPS3[L.r];L.hintT=T;await say(SK3[L.r])},
  wrong(L){tap3(L,4)},

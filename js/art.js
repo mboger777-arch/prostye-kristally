@@ -81,10 +81,10 @@ function drawParticles(){for(const p of PS){X.save();X.globalAlpha=Math.min(1,p.
  else{X.globalCompositeOperation='lighter';const s=p.s*(p.kind==='mote'?3.2:4.5);dimg('star',-s/2,-s/2,s,s)}
  X.restore()}}
 // ---- облачко речи: хрустальный пузырь ----
-function drawTalk(){if(!talk)return;const c=cast.find(c=>c.n===talk.who);const fs=26,lh=32;X.font=fs+'px '+FONT;const maxW=c?420:860;const L=wrap(talk.text,maxW);
- const tw=Math.max(...L.map(l=>X.measureText(l).width),c?X.measureText(NAMES[c.n][0]).width:0);const padX=58,padT=44,padB=74;const bw=Math.max(240,tw+padX*2),bh=L.length*lh+(c?34:0)+padT+padB;
+function drawTalk(){if(!talk)return;const c=cast.find(c=>c.n===talk.who);const fs=26,lh=32;X.font=fs+'px '+FONT;const side=scene==='l3';const maxW=side?220:c?420:860;const L=wrap(talk.text,maxW);
+ const tw=Math.max(...L.map(l=>X.measureText(l).width),c?X.measureText(NAMES[c.n][0]).width:0);const padX=side?40:58,padT=44,padB=74;const bw=side?312:Math.max(240,tw+padX*2),bh=L.length*lh+(c?34:0)+padT+padB;
  const age=T-talk.t0,pop=age<.18?.7+.3*ease(age/.18):1;let bx,by,flip=false;
- if(c){const hx2=c.x,hy=c.y-c.h*1.0-(c.jump&&T-c.jump<.75?50:0);flip=c.x>640;bx=flip?hx2-bw+40:hx2-40;bx=clamp(bx,4,1276-bw);by=Math.max(4,hy-bh+30)}else{bx=640-bw/2;by=8}
+ if(side){bx=962;by=86;flip=c&&c.x>640}else if(c){const hx2=c.x,hy=c.y-c.h*1.0-(c.jump&&T-c.jump<.75?50:0);flip=c.x>640;bx=flip?hx2-bw+40:hx2-40;bx=clamp(bx,4,1276-bw);by=Math.max(4,hy-bh+30)}else{bx=640-bw/2;by=8}
  X.save();const ox=flip?bx+bw*.85:bx+bw*.15;X.translate(ox,by+bh);X.scale(pop,pop);X.translate(-ox,-by-bh);
  win('bubble',bx,by,bw,bh,flip);
  let y0=by+padT;if(c){txt(NAMES[c.n][0],bx+padX,y0,24,NAMES[c.n][1],{al:'left',st:'#2a1240',lw:5});y0+=34}
