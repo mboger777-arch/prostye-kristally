@@ -17,7 +17,9 @@ function toggleFS(){isFS()?exitFS():goFS()}
 const TOUCHDEV=('ontouchstart' in window)||navigator.maxTouchPoints>0;let _fsTried=false;
 addEventListener('pointerdown',()=>{if(TOUCHDEV&&!_fsTried&&!PORTRAIT()){_fsTried=true;goFS()}},true);
 document.addEventListener('fullscreenchange',()=>onOrient());document.addEventListener('webkitfullscreenchange',()=>onOrient());
-function fsButton(){if(!FS_OK||(scene!=='title'&&scene!=='map'))return;btn('fs',62,52,76,64,isFS()?'✕':'⛶',toggleFS,{always:1,fs:34})}
+const FSI={on:new Image(),off:new Image()};FSI.on.src='assets/ui/fs_on.png';FSI.off.src='assets/ui/fs_off.png';
+function fsButton(){if(!FS_OK||(scene!=='title'&&scene!=='map'))return;const x=62,y=52,d=78;UI.push({id:'fs',x,y,w:d,h:d,fn:toggleFS,always:1});const im=isFS()?FSI.off:FSI.on;if(!im.complete||!im.naturalWidth)return;
+ const hov=Math.hypot(PX-x,PY-y)<d/2;X.save();X.translate(x,y);X.rotate(Math.sin(T*1.3)*.04);const k=hov?1.07:1;X.scale(k,k);X.shadowColor='rgba(0,0,0,.45)';X.shadowBlur=10;X.shadowOffsetY=4;X.drawImage(im,-d/2,-d/2,d,d*im.naturalHeight/im.naturalWidth);X.restore()}
 let _lastW=-1,_lastH=-1,_wasP=null;function relayout(){rs();_lastW=W;_lastH=H;const p=PORTRAIT();if(_wasP!==p){_wasP=p;document.body.classList.toggle('portrait',p);if(!p){last=performance.now();if(AC&&AC.state==='suspended')AC.resume().catch(()=>{})}}}
 function onOrient(){relayout();[100,300,600].forEach(t=>setTimeout(relayout,t))}
 addEventListener('resize',onOrient);addEventListener('orientationchange',onOrient);addEventListener('pageshow',onOrient);addEventListener('scroll',()=>{if(scrollX||scrollY)scrollTo(0,0)});document.addEventListener('visibilitychange',()=>{if(!document.hidden)onOrient()});
