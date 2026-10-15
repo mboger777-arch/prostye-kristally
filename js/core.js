@@ -3,7 +3,14 @@
 const C=document.getElementById('c'),X=C.getContext('2d');
 let W=0,H=0,S=1,OX=0,OY=0,DPR=1,T=0,DT=0.016,shake=0,PX=640,PY=360,fade=1;
 function rs(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;C.width=Math.round(W*DPR);C.height=Math.round(H*DPR);S=Math.min(W/1280,H/720);OX=(W-1280*S)/2;OY=(H-720*S)/2}
-addEventListener('resize',rs);rs();
+function vpWH(){const v=window.visualViewport;let w=innerWidth,h=innerHeight;if(v&&v.width>0){w=Math.round(v.width*(v.scale||1));h=Math.round(v.height*(v.scale||1))}const e=document.documentElement;return[w||e.clientWidth,h||e.clientHeight]}
+function rs(){DPR=Math.min(2,window.devicePixelRatio||1);[W,H]=vpWH();C.style.width=W+'px';C.style.height=H+'px';C.width=Math.round(W*DPR);C.height=Math.round(H*DPR);S=Math.min(W/1280,H/720);OX=(W-1280*S)/2;OY=(H-720*S)/2}
+let _lastW=-1,_lastH=-1,_wasP=null;function relayout(){rs();_lastW=W;_lastH=H;const p=PORTRAIT();if(_wasP!==p){_wasP=p;document.body.classList.toggle('portrait',p);if(!p){last=performance.now();if(AC&&AC.state==='suspended')AC.resume().catch(()=>{})}}}
+function onOrient(){relayout();[100,300,600].forEach(t=>setTimeout(relayout,t))}
+addEventListener('resize',onOrient);addEventListener('orientationchange',onOrient);addEventListener('pageshow',onOrient);document.addEventListener('visibilitychange',()=>{if(!document.hidden)onOrient()});
+if(screen.orientation&&screen.orientation.addEventListener)screen.orientation.addEventListener('change',onOrient);
+if(window.visualViewport){visualViewport.addEventListener('resize',onOrient);visualViewport.addEventListener('scroll',onOrient)}
+setInterval(()=>{const[w,h]=vpWH();if(w!==_lastW||h!==_lastH||PORTRAIT()!==_wasP)relayout()},500);rs();
 const IM={};function img(n,src){const i=new Image();i.src=src;IM[n]=i}
 ['title','l1','l2','l3','l4','l5'].forEach(n=>{img('bg_'+n,'assets/bg_'+n+'.jpg');img('fg_'+n,'assets/fg_'+n+'.png')});
 ['granit','iskorka','shester','troll'].forEach(n=>img(n,'assets/sprites/'+n+'.png'));
@@ -19,7 +26,7 @@ let SV;try{SV=JSON.parse(localStorage.getItem('prostye1'))}catch(e){}
 if(!SV)SV={stars:[0,0,0,0,0],secret:[0,0,0,0],open:1};
 function save(){try{localStorage.setItem('prostye1',JSON.stringify(SV))}catch(e){}}
 // ---- звук (синтез WebAudio) ----
-let AC=null;function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+var AC=null;function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
 function tone(f,d,type,v,when,slide){const a=ac();if(!a)return;const t=a.currentTime+(when||0),o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v||.1,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05)}
 function noise(d,v,fq,when){const a=ac();if(!a)return;const b=a.createBuffer(1,Math.floor(a.sampleRate*d),a.sampleRate),ch=b.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*(1-i/ch.length);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=fq;const g=a.createGain();g.gain.value=v;s.connect(f).connect(g).connect(a.destination);s.start(a.currentTime+(when||0))}
 const SFX={ok(){[1046,1318,1568,2093].forEach((f,i)=>tone(f,.5,'sine',.08,i*.07))},bad(){tone(240,.25,'triangle',.1,0,160);tone(190,.3,'triangle',.08,.12,130)},
@@ -75,7 +82,7 @@ C.addEventListener('pointerdown',e=>{if(PORTRAIT())return;ac();const x=(e.client
  if(SCN&&SCN.tap)SCN.tap(x,y)});
 C.addEventListener('pointermove',e=>{PX=(e.clientX-OX)/S;PY=(e.clientY-OY)/S});
 let last=performance.now(),fpsA=60;
-const PORTRAIT=()=>innerHeight>innerWidth*1.05;
+const TOUCH=(('ontouchstart' in window)||navigator.maxTouchPoints>0)&&matchMedia('(pointer:coarse)').matches;const PORTRAIT=()=>TOUCH&&H>W*1.05;
 function loop(now){DT=PORTRAIT()?0:clamp((now-last)/1000,0,.05);last=now;T+=DT;fpsA=fpsA*.95+(1/Math.max(DT,.001))*.05;
  X.setTransform(DPR,0,0,DPR,0,0);X.clearRect(0,0,W,H);
  const sx=(Math.random()-.5)*shake,sy=(Math.random()-.5)*shake;shake*=Math.pow(.004,DT);if(shake<.3)shake=0;
