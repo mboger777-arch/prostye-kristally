@@ -1,4 +1,7 @@
 'use strict';
+// ---- загрузка: считаем все картинки, ждём шрифт; экран загрузки с прогрессом, без зависаний (таймаут) ----
+const LOADQ=[];{const _I=window.Image;window.Image=function(w,h){const i=new _I(w,h);LOADQ.push(i);return i};window.Image.prototype=_I.prototype}
+let LOADED=false,LOADT0=performance.now(),FONTOK=false;
 // ===== Пещера простых кристаллов — движок =====
 const C=document.getElementById('c'),X=C.getContext('2d');
 let W=0,H=0,S=1,OX=0,OY=0,DPR=1,T=0,DT=0.016,shake=0,PX=640,PY=360,fade=1;
@@ -50,18 +53,22 @@ const SFX={ok(){[1046,1318,1568,2093].forEach((f,i)=>tone(f,.5,'sine',.08,i*.07)
  tick(){tone(2200,.03,'square',.03)},whoosh(){noise(.5,.2,600)}};
 // ---- голос и реплики ----
 const G={_busy:0,fast:false,mute:false};let talk=null,skipTalk=null;
-function wait(ms){return new Promise(r=>setTimeout(r,G.fast?Math.min(ms,40):ms))}
+const STALE={stale:1};// корутина устаревшей сцены: тихо обрывается, не трогает новый уровень
+function ctxNow(){return{lv:typeof LV!=='undefined'?LV:null,sc:scene}}
+function alive(c){if(/^l\d$/.test(c.sc))return typeof LV!=='undefined'&&LV===c.lv&&(scene===c.sc||scene==='secret');return scene===c.sc}
+function wait(ms){const c=ctxNow();return new Promise((r,j)=>setTimeout(()=>alive(c)?r():j(STALE),G.fast?Math.min(ms,40):ms))}
 let SAYID=0,SAYQ=Promise.resolve(),SAYEP=0;
 function stopTalk(){SAYEP++;if(skipTalk)skipTalk();talk=null}
-function say(k){const ep=SAYEP;const p=SAYQ.then(()=>ep===SAYEP?say1(k):null);SAYQ=p.catch(()=>{});return p}
+function say(k){const ep=SAYEP,c=ctxNow();const p=SAYQ.then(()=>ep===SAYEP&&alive(c)?say1(k):null);SAYQ=p.catch(()=>{});return p.then(v=>{if(!alive(c))throw STALE;return v})}
 async function say1(k){const l=LINES[k];if(!l)return;const id=++SAYID;talk={who:l.who,text:l.t,k,t0:T,id};
  if(G.fast){await wait(60);if(talk&&talk.id===id)talk=null;return}
  const v=typeof VOICE!=='undefined'&&VOICE[k];const dur=Math.max(2200,l.t.length*75);
- await new Promise(async res=>{let done=false,a=null;const fin=()=>{if(!done){done=true;if(a){try{a.pause()}catch(e){}}if(skipTalk===sk)skipTalk=null;res()}};const sk=()=>fin();skipTalk=sk;
+ await new Promise(async res=>{let done=false,a=null;const fin=()=>{if(!done){done=true;if(a){try{a.pause()}catch(e){}}if(skipTalk===sk)skipTalk=null;res()}};const sk=()=>fin();skipTalk=sk;setTimeout(fin,((v&&v[1])||0)*1000+dur+4000);// страховка: play() может зависнуть на телефоне — очередь не должна вставать
+  
   if(v&&!G.mute){a=new Audio('assets/voice/'+v[0]);try{attachAnalyser(a)}catch(e){}a.onended=()=>setTimeout(fin,350);a.onerror=()=>setTimeout(fin,dur);let ok=true;try{await a.play()}catch(e){ok=false}
    if(done)return;if(ok)setTimeout(fin,(v[1]+2.5)*1000);else setTimeout(fin,dur)}else setTimeout(fin,dur)});
  if(talk&&talk.id===id)talk=null}
-async function run(fn){G._busy++;try{await fn()}catch(e){console.error(e)}finally{G._busy--}}
+async function run(fn){G._busy++;try{await fn()}catch(e){if(e!==STALE)console.error(e)}finally{G._busy--}}
 // ---- частицы ----
 const PS=[];
 function burst(x,y,n,kind,hue,sp){sp=sp||1;for(let i=0;i<n;i++){const a=Math.random()*6.283,v=rnd(80,420)*sp;PS.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-(kind==='shard'?180:0),life:1,dec:rnd(.6,1.3),kind,hue:hue+rnd(-15,15),s:kind==='shard'?rnd(6,16):rnd(2,6),rot:rnd(0,6),vr:rnd(-10,10)})}}
@@ -93,7 +100,7 @@ function oops(n){const c=cast.find(c=>c.n===n);if(c)c.wob=T}
 function drawCast(){cast.forEach(drawHero)}
 // ---- сцены ----
 const SC={};let scene='title',SCN=null;
-function go(n,arg){scene=n;SCN=SC[n];fade=1;stopTalk();SCN.enter&&SCN.enter(arg)}
+function go(n,arg){try{if(typeof LV!=='undefined'&&LV&&n!=='secret'&&n!=='l'+LV.n)LV.resume=false}catch(e){}scene=n;SCN=SC[n];fade=1;stopTalk();PS.length=0;SCN.enter&&SCN.enter(arg)}
 C.addEventListener('pointerdown',e=>{if(PORTRAIT())return;ac();const x=(e.clientX-VVX-OX)/S,y=(e.clientY-VVY-OY)/S;PX=x;PY=y;
  for(let i=UI.length-1;i>=0;i--){const b=UI[i];if(Math.abs(x-b.x)<b.w/2+6&&Math.abs(y-b.y)<b.h/2+6){if(b.dis)return;if(G._busy&&!b.always){if(b.id==='hint'&&typeof LV!=='undefined'&&LV&&!LV.done&&typeof DEF!=='undefined'&&DEF[LV.n]&&DEF[LV.n].hint){SFX.click();stopTalk();LV.reveal=true;DEF[LV.n].hint(LV)}return}SFX.click();b.fn();return}}
  if(talk&&talk.box&&skipTalk){const[bx,by,bw,bh]=talk.box;if(x>bx&&x<bx+bw&&y>by&&y<by+bh){skipTalk();return}}
@@ -119,3 +126,13 @@ let rotT=0;function drawRotate(){rotT+=1/60;X.setTransform(DPR,0,0,DPR,0,0);cons
 Object.defineProperty(G,'busy',{get:()=>G._busy>0});Object.defineProperty(G,'scene',{get:()=>scene});
 G.go=n=>go(n);G.S=SV;G.pg=(x,y)=>({x:OX+x*S,y:OY+y*S});G.btns=()=>UI.map(b=>({id:b.id,x:b.x,y:b.y}));G.fps=()=>fpsA;
 G.math={isP,fac};
+
+function loadFrac(){const n=LOADQ.filter(i=>i.src).length||1,d=LOADQ.filter(i=>i.src&&(i.complete)).length;return Math.min(1,d/n)}
+SC.load={draw(){const v=vis();const g=X.createLinearGradient(0,v.y0,0,v.y0+v.h);g.addColorStop(0,'#5b3a8c');g.addColorStop(1,'#22164a');X.fillStyle=g;X.fillRect(v.x0,v.y0,v.w,v.h);
+ const tb=IM.bg_title;if(tb&&tb.complete&&tb.naturalWidth){X.globalAlpha=.55;const s=Math.max(v.w/1280,v.h/720);X.drawImage(tb,640-640*s,360-360*s,1280*s,720*s);X.globalAlpha=1}
+ const f=loadFrac(),fs=Math.max(40,24/S);X.font=fs+'px '+(FONTOK?FONT:'serif');X.textAlign='center';X.textBaseline='middle';X.lineWidth=fs*.14;X.strokeStyle='#2a1240';X.fillStyle='#fff3d6';X.strokeText('Пещера простых кристаллов',640,300);X.fillText('Пещера простых кристаллов',640,300);
+ const bw=Math.min(760,v.w-80),bh=Math.max(26,16/S),bx=640-bw/2,by=390;X.fillStyle='rgba(40,20,8,.55)';X.beginPath();X.roundRect(bx-4,by-4,bw+8,bh+8,(bh+8)/2);X.fill();X.fillStyle='#b48cff';X.beginPath();X.roundRect(bx,by,Math.max(bh,bw*f),bh,bh/2);X.fill();
+ X.font=Math.max(26,15/S)+'px '+(FONTOK?FONT:'serif');X.fillStyle='#fff3d6';X.strokeText('Загрузка… '+Math.round(f*100)+'%',640,by+bh+Math.max(40,22/S));X.fillText('Загрузка… '+Math.round(f*100)+'%',640,by+bh+Math.max(40,22/S))}};
+function startGame(){scene='load';SCN=SC.load;fade=0;requestAnimationFrame(loop);
+ (document.fonts&&document.fonts.load?Promise.race([document.fonts.load('40px '+FONT),new Promise(r=>setTimeout(r,6000))]):Promise.resolve()).then(()=>{FONTOK=true});
+ const chk=()=>{const t=performance.now()-LOADT0;if((loadFrac()>=1&&FONTOK&&t>500)||t>25000){LOADED=true;go('title')}else setTimeout(chk,100)};chk()}

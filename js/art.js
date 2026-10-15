@@ -160,4 +160,4 @@ function drawHero(c){const im=IM[c.n],R=RIG[c.n];if(!okI(im))return;const ph=c.x
  if(puz>0&&c.n!=='troll'){const hx2=c.x+(c.flip?-1:1)*(R.head.p[0]-.5)*w,hy=c.y-h*1.02+dy;txt('?',hx2+Math.sin(T*6)*4,hy-10*Math.sin(puz*3),44*Math.min(1,puz*3),'#ffe066')}
  if(c.mood==='laugh'&&T-c.moodT<1.5)txt('Ха-ха!',c.x,c.y-h*1.05,40,'#c8ff9a')}
 G.vis=n=>{const c=cast.find(c=>c.n===n);return c?visFor(c):-1};
-go('title');requestAnimationFrame(loop);
+startGame();

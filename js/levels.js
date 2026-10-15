@@ -33,7 +33,7 @@ const SECRET_POS=[[1215,250],[95,215],[1240,560],[70,330]];
 const DEF={};
 function levelScene(n){SC['l'+n]={enter(){if(LV&&LV.n===n&&LV.resume){LV.resume=false;cast=LV.cast;return}
   LV={n,r:0,mist:0,streak:0,done:false,banner:null,msg:null,def:DEF[n]};DEF[n].init(LV);cast=LV.cast;run(()=>DEF[n].start(LV))},
- draw(){bgDraw('l'+n,0,LV.scroll);motes([190,300,180,40,110][n-1]);DEF[n].draw(LV);drawCast();if(DEF[n].over)DEF[n].over(LV);
+ draw(){bgDraw('l'+n,0,LV.scroll);motes([190,300,180,40,110][n-1]);if(!LV.done||T-LV.doneT<1.2)DEF[n].draw(LV);drawCast();if(DEF[n].over)DEF[n].over(LV);
   if(n<5&&!SV.secret[n-1]&&!LV.done){const[sx,sy]=SECRET_POS[n-1];gem(sx,sy,11,320,'',{alpha:.45+.35*Math.sin(T*3),glow:.8+.4*Math.sin(T*3)})}
   if(LV.banner&&n===3){const b=LV.banner;X.font='24px '+FONT;const L=wrap(b.t,200),h=L.length*30+80,y=Math.min(530-h,Math.max(70,talk&&talk.box?talk.box[1]+talk.box[3]+6:0));X.globalAlpha=ease((T-b.t0)*4);win('win_mistake',996,y,280,h);L.forEach((l,i)=>txt(l,1136,y+h/2-(L.length-1)*15+i*30,24,'#ffe0d8',{lw:4}));X.globalAlpha=1}
   else if(LV.banner){const b=LV.banner;X.font='27px '+FONT;const bad=/ffd0d0|ffb0b0/.test(b.col||'');const L=wrap(b.t,700),w=Math.max(...L.map(l=>X.measureText(l).width))+(bad?120:150),h=L.length*36+(bad?84:70),PB=placeBanner(w,h,Math.min(b.y||96,712-h)),y=PB[1],bx0=PB[0],bcx=bx0+w/2;
@@ -43,7 +43,7 @@ function levelScene(n){SC['l'+n]={enter(){if(LV&&LV.n===n&&LV.resume){LV.resume=
   if(LV.done)endPanel(n)},
  tap(x,y){if(G.busy||LV.done)return;if(n<5&&!SV.secret[n-1]){const[sx,sy]=SECRET_POS[n-1];if(Math.hypot(x-sx,y-sy)<40){LV.resume=true;go('secret',n);return}}DEF[n].tap(LV,x,y)}}}
 function banner(t,col,y){LV.banner={t,col,t0:T,y}}
-async function roundDone(){LV.r++;LV.banner=null;if(LV.r>=ROUNDS[LV.n-1]){LV.done=true;LV.doneT=T;const st=LV.mist===0?3:LV.mist<=2?2:1;LV.stars=st;SV.stars[LV.n-1]=Math.max(SV.stars[LV.n-1],st);SV.open=Math.max(SV.open,Math.min(5,LV.n+1));save();cheer();for(let i=0;i<3;i++)setTimeout(()=>{if(i<st){SFX.star();burst(560+i*80,368,24,'spark',48)}},500+i*350);if(LV.n<5)await say('win');return true}return false}
+async function roundDone(){LV.r++;LV.banner=null;if(LV.r>=ROUNDS[LV.n-1]){LV.done=true;LV.doneT=T;const st=LV.mist===0?3:LV.mist<=2?2:1;LV.stars=st;SV.stars[LV.n-1]=Math.max(SV.stars[LV.n-1],st);SV.open=Math.max(SV.open,Math.min(5,LV.n+1));save();cheer();const cx_=ctxNow();for(let i=0;i<3;i++)setTimeout(()=>{if(i<st&&alive(cx_)){SFX.star();burst(560+i*80,368,24,'spark',48)}},500+i*350);if(LV.n<5)await say('win');return true}return false}
 function endPanel(n){const v=vis();X.fillStyle='rgba(5,2,15,.45)';X.fillRect(v.x0,v.y0,v.w,v.h);win('win_victory',350,110,580,420);txt(n<5?'Пещера пройдена!':'Тролль побеждён!',640,275,34,'#8a4a08',{st:'rgba(255,246,220,.9)',lw:5});
  for(let i=0;i<3;i++){const k=ease((T-LV.doneT-.5-i*.35)*3);if(k>0)star(560+i*80,368,30,i<LV.stars,.4+.6*k+Math.sin(T*4+i)*.03);else star(560+i*80,368,30,false)}
  txt(LV.mist===0?'Без единой ошибки!':'Ошибок: '+LV.mist,640,438,28,'#5a2e0c',{st:'rgba(255,246,220,.9)',lw:4});
@@ -79,7 +79,7 @@ function setR1(L){const R=R1[L.r];L.R=R;L.cur=[];L.found=[];L.msg=null;L.qDone=0
  const nodes=[],leaves=L.all.length,x0=690,x1=1150,y0=150,y1=600;const root={code:'',d:0,x:x0,y:(y0+y1)/2};nodes.push(root);
  L.all.forEach((c,i)=>{let par=root;for(let d=1;d<=R.len;d++){const code=c.slice(0,d);let nd=nodes.find(z=>z.code===code);if(!nd){nd={code,d,par,leaf:d===R.len,x:x0+(x1-x0)*d/R.len-(d===R.len?40:0),ys:[]};nodes.push(nd)}nd.ys.push(y0+(y1-y0)*(leaves===1?.5:i/(leaves-1)));par=nd}});
  nodes.forEach(n=>{if(n.ys)n.y=n.ys.reduce((a,b)=>a+b,0)/n.ys.length});L.tree={nodes}}
-function dig1(L,d){if(G.busy||L.done)return;const R=L.R;if(L.cur.length>=R.len)return;L.cur.push(d);SFX.tick();if(L.cur.length===R.len){const c=L.cur.join('');run(async()=>{await wait(250);await check1(L,c)})}}
+function dig1(L,d){if(G.busy||L.done)return;const R=L.R;if(L.cur.length>=R.len)return;if(!L.cur.length){L.msg=null;L.banner=null}L.cur.push(d);SFX.tick();if(L.cur.length===R.len){const c=L.cur.join('');run(async()=>{await wait(250);await check1(L,c)})}}
 async function check1(L,c){const R=L.R;L.cur=[];
  if(!R.rep&&new Set(c).size<c.length){L.mist++;L.err=T;SFX.bad();shake=6;oops('shester');const d=[...c].find((x,i)=>c.indexOf(x)!==i);L.msg={t:'В коде '+c+' цифра '+d+' повторяется — так нельзя!',col:'#ffb0b0'};await say('l1rep');return}
  if(L.found.includes(c)){L.mist++;L.err=T;SFX.bad();oops('shester');L.msg={t:'Код '+c+' уже найден. Ищи новый!',col:'#ffb0b0'};await say('l1dup');return}
@@ -108,7 +108,7 @@ DEF[2]={init(L){L.cast=[{n:'granit',x:290,y:735,h:440},{n:'iskorka',x:105,y:735,
 function next2(L){const hard=POOL.filter(x=>!EASY2.includes(x));let src=(L.streak>=2&&!L.lastWrong)||L.r>=4?hard:EASY2;let c=src.filter(x=>!L.used.includes(x));if(!c.length)c=POOL.filter(x=>!L.used.includes(x));
  const lastP=L.used.length?isP(L.used[L.used.length-1]):null;const alt=c.filter(x=>isP(x)!==lastP);if(alt.length&&Math.random()<.65)c=alt;
  L.num=c[Math.floor(Math.random()*c.length)];L.used.push(L.num);L.hue=[190,280,320,160,40][L.used.length%5];L.phase='ask';L.pieces=null;L.axe=null;L.banner=null}
-function ans2(L,guess){if(G.busy||L.done||L.phase!=='ask')return;const pr=isP(L.num);run(async()=>{
+function ans2(L,guess){if(G.busy||L.done||L.phase!=='ask')return;const pr=isP(L.num);L.banner=null;run(async()=>{
  if(guess!==pr){L.mist++;L.streak=0;L.lastWrong=true;SFX.bad();L.wob=T;oops('granit');banner('Не так! '+expl(L.num),'#ffd0d0');await say('l2w');await say('n'+L.num);return}
  L.streak++;L.lastWrong=false;L.phase='anim';L.axe=T;oops('granit');await wait(350);
  if(pr){SFX.clang();L.flash=T;burst(760,300,30,'spark',50);shake=6}else{SFX.shatter();shake=18;burst(720,360,46,'shard',L.hue);const f=fac(L.num);L.pieces={t0:T,f:[f[0],L.num/f[0]]}}
@@ -128,13 +128,13 @@ DEF[3]={init(L){L.cast=[{n:'iskorka',x:1062,y:760,h:225,flip:1},{n:'granit',x:12
    if(L.bad[n]&&T-L.bad[n]<.6){col='#d02020';x+Math.sin(T*50)*3}
    X.globalAlpha=s===3?a+.15:1;const bd=L.bad[n]&&T-L.bad[n]<.6;txt(String(n),x+(bd?Math.sin(T*60)*3:0),y+dy,68,hl?'#fff6b0':bd?'#ff9a9a':s===3?'#d8f4ff':s===1?'#b8b8c0':'#fff1d0',{st:hl?'#a05a00':s===3?'#0a3a5a':'#2a1406',lw:hl?10:9});X.globalAlpha=1}
   if(L.wash){win('scroll_banner',996,430,280,92);txt('Смываем кратные '+L.wash,1136,476,24,'#0a3a5a',{st:'rgba(230,250,255,.85)',lw:4})}
-  if(L.cnt){win('sign',996,440,280,80);txt('Простых чисел: '+L.cnt,1136,480,30,'#fff3b0',{st:'#2a1406',lw:5})}},
+  if(L.cnt&&!L.wash){win('sign',996,440,280,80);txt('Простых чисел: '+L.cnt,1136,480,30,'#fff3b0',{st:'#2a1406',lw:5})}},
  tap(L,x,y){const c=Math.floor((x-CX3)/CW3),r=Math.floor((y-CY3)/CH3);if(c<0||c>9||r<0||r>4)return;tap3(L,r*10+c+1)},
  async hint(L){L.hintN=STEPS3[L.r];L.hintT=T;await say(SK3[L.r])},
  wrong(L){tap3(L,4)},
  info(L){return{r:L.r,expect:STEPS3[L.r],primes:L.st.filter(s=>s===2).length}}};
 G.cellXY=n=>cell3(n);
-function tap3(L,n){if(G.busy||L.done)return;const ex=STEPS3[L.r];run(async()=>{
+function tap3(L,n){if(G.busy||L.done)return;const ex=STEPS3[L.r];L.banner=null;run(async()=>{
  if(n!==ex){L.mist++;L.bad[n]=T;SFX.bad();oops('iskorka');const s=L.st[n],f=fac(n);let m;
   if(ex===1)m='Сначала нажми на число 1.';else if(s===3)m=n+' уже смыто: '+n+' = '+f[0]+' × '+(n/f[0])+'.';else if(s===2)m=n+' уже обведено — оно простое.';else if(n===1)m='1 — ни простое, ни составное.';
   else if(!isP(n))m=n+' = '+f[0]+' × '+(n/f[0])+' — составное, его смоет вода.';else m=n+' простое, но сначала самое маленькое: '+ex+'.';
@@ -170,7 +170,7 @@ DEF[4]={init(L){L.cast=[{n:'shester',x:90,y:740,h:250},{n:'iskorka',x:250,y:345,
 function setF4(L){const k=L.r<3?2:3;const smallP=L.tl>10||L.r<2;let pc=PR4.filter(p=>(smallP?p<=31:p>=11)&&!L.usedP.includes(p));const p=pc[Math.floor(Math.random()*pc.length)];L.usedP.push(p);
  let cc=shuffle(CO4.filter(c=>!L.usedC.includes(c))).slice(0,k-1);if(cc.length<k-1)cc=shuffle(CO4.slice()).slice(0,k-1);L.usedC.push(...cc);
  const ns=shuffle([p,...cc]);const ys=k===2?[400,660]:[300,470,665];L.opts=ns.map((n,i)=>({n,prime:isP(n),y:ys[i],hue:[190,300,45][i]}));L.sel=null;L.ride=null;L.cx=140;L.phase='go';L.t0=T}
-function pick4(L,i){if(G.busy||L.done)return;const o=L.opts[i];L.sel=i;const prev=L.phase;L.phase='ride';run(async()=>{
+function pick4(L,i){if(G.busy||L.done)return;const o=L.opts[i];L.sel=i;L.banner=null;const prev=L.phase;L.phase='ride';run(async()=>{
  const dur=G.fast?.05:.9;let t0=T;const to=o.prime?1:.78;while(T-t0<dur){L.ride=ease((T-t0)/dur)*to;await new Promise(r=>requestAnimationFrame(r))}L.ride=to;
  if(o.prime){SFX.ok();burst(bez(1,o.y).x-60,o.y-60,40,'spark',48);cheer();L.streak++;if(L.streak>=2)L.tl=Math.max(5,L.tl-1.2);await say('l4ok');fade=.9;if(!await roundDone()){await wait(200);setF4(L)}else L.phase='end'}
  else{L.mist++;L.streak=0;L.tl=Math.min(14,L.tl+2);o.dead=T;o.tried=1;SFX.hit();shake=16;burst(bez(.78,o.y).x+40,o.y,26,'shard',20);oops('granit');banner('Тупик! '+expl(o.n),'#ffd0d0',90);
@@ -180,12 +180,13 @@ levelScene(4);
 DEF[5]={init(L){L.cast=[{n:'granit',x:95,y:735,h:300},{n:'iskorka',x:250,y:740,h:270},{n:'troll',x:1125,y:745,h:550,flip:1}];L.hearts=3;L.nums=[12,30,84];setB(L)},
  async start(L){await say('l5i');await smash(L)},
  draw(L){for(let i=0;i<3;i++){X.save();X.translate(1030+i*48,140);X.scale(1+(i===L.hearts&&T-(L.hitT||0)<.6?.5:0),1);heart(i<L.hearts);X.restore()}
-  for(const nd of L.nodes){if(nd.par)vine([{x:nd.par.x,y:nd.par.y+40},{x:nd.x,y:nd.y-40}],6,true)}
+  const rbk=L.rebuild?Math.max(0,1-(T-L.rebuild)*2.5):1;// при сборке ответа старое дерево гаснет — не висят числа
+  if(rbk>0){X.save();X.globalAlpha*=rbk;for(const nd of L.nodes){if(nd.par)vine([{x:nd.par.x,y:nd.par.y+40},{x:nd.x,y:nd.y-40}],6,true)}
   for(const nd of L.nodes){const k=ease((T-nd.t0)*3);if(L.rebuild&&nd.prime)continue;const cur=nd===L.cur;
-   gem(nd.x,nd.y,nd.d===0?62:48,nd.prime?48:cur?280:250,nd.v,{sc:.3+.7*k,crack:!nd.prime&&nd.split?1:0,glow:nd.prime?1.3:cur?1+.3*Math.sin(T*6):.4,grey:nd.split&&!nd.prime,alpha:nd.split&&!nd.prime?.6:1,fs:nd.d===0?70:56,rot:cur&&L.wob&&T-L.wob<.5?Math.sin((T-L.wob)*40)*.1:0})}
-  if(L.rebuild){const ps=L.nodes.filter(n=>n.prime);const k=ease((T-L.rebuild)*1.5);const n=ps.length,x0=640-(n-1)*70;
-   ps.forEach((p,i)=>{const tx=x0+i*140,ty=560;gem(p.x+(tx-p.x)*k,p.y+(ty-p.y)*k,44,48,p.v,{fs:56,glow:1.3});if(i&&k>.9)txt('×',tx-70,ty,60,'#fff',{st:'#1a0c04',lw:8})});
-   if(k>.95)txt('= '+L.N,x0+(n-1)*140+80,560,66,'#fff3b0',{al:'left',st:'#1a0c04',lw:9})}},
+   gem(nd.x,nd.y,nd.d===0?62:48,nd.prime?48:cur?280:250,nd.v,{sc:.3+.7*k,crack:!nd.prime&&nd.split?1:0,glow:nd.prime?1.3:cur?1+.3*Math.sin(T*6):.4,grey:nd.split&&!nd.prime,alpha:nd.split&&!nd.prime?.6:1,fs:nd.d===0?70:56,rot:cur&&L.wob&&T-L.wob<.5?Math.sin((T-L.wob)*40)*.1:0})}X.restore()}
+  if(L.rebuild){const ps=L.nodes.filter(n=>n.prime);const k=ease((T-L.rebuild)*1.5);const n=ps.length,x0=510-(n-1)*55;// ряд ответа — над полем, где он не уходит под тролля и героев
+   ps.forEach((p,i)=>{const tx=x0+i*110,ty=215;gem(p.x+(tx-p.x)*k,p.y+(ty-p.y)*k,44,48,p.v,{fs:56,glow:1.3});if(i&&k>.9)txt('×',tx-55,ty,60,'#fff',{st:'#1a0c04',lw:8})});
+   if(k>.95)txt('= '+L.N,x0+(n-1)*110+62,215,66,'#fff3b0',{al:'left',st:'#1a0c04',lw:9})}},
  over(L){if(L.done||!L.cur)return;[2,3,5,7].forEach((p,i)=>btn('p'+p,440+i*110,650,90,70,String(p),()=>pickB(L,p),{hue:[45,190,300,150][i],fs:70}))},
  tap(){},
  async hint(L){await say('l5h')},
@@ -193,7 +194,7 @@ DEF[5]={init(L){L.cast=[{n:'granit',x:95,y:735,h:300},{n:'iskorka',x:250,y:740,h
  info(L){return{r:L.r,v:L.cur?L.cur.v:null,N:L.N}}};
 function setB(L){L.N=L.nums[L.r];const root={v:L.N,d:0,x:560,y:150,t0:T,prime:false};L.nodes=[root];L.cur=null;L.rebuild=0}
 async function smash(L){swing('troll');mood('troll','laugh');await wait(380);shake=22;SFX.hit();burst(560,150,30,'shard',280);L.cur=L.nodes[0];await say('b'+L.N)}
-function pickB(L,p){if(G.busy||L.done||!L.cur)return;run(async()=>{const nd=L.cur,v=nd.v;
+function pickB(L,p){if(G.busy||L.done||!L.cur)return;L.banner=null;run(async()=>{const nd=L.cur,v=nd.v;
  if(v%p!==0){L.mist++;L.wob=T;SFX.bad();oops('iskorka');banner(v+' не делится на '+p+' нацело'+(p===2?' — оно нечётное.':p===5?' — оно не оканчивается на 0 или 5.':'.'),'#ffd0d0',470);mood('troll','laugh');await say('l5no');return}
  L.banner=null;SFX.shatter();shake=8;burst(nd.x,nd.y,24,'shard',280);nd.split=true;const q=v/p;
  const a={v:p,d:nd.d+1,x:nd.x-85,y:nd.y+105,t0:T,prime:true,par:nd},b={v:q,d:nd.d+1,x:nd.x+85,y:nd.y+105,t0:T,prime:isP(q),par:nd};L.nodes.push(a,b);
