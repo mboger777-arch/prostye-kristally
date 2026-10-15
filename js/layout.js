@@ -51,3 +51,9 @@ bgDraw=function(n,dim,scroll){const v=vis(),s=Math.max(v.w/1280,v.h/720);const m
  if(f&&f.complete&&f.naturalWidth){const ss=s*1.035,ox=-mx*8+Math.sin(T*.21)*4,oy=-my*4;X.drawImage(f,640-640*ss+ox,360-360*ss+oy+6,1280*ss,720*ss)}
  if(dim){X.fillStyle=`rgba(8,4,24,${dim})`;X.fillRect(v.x0,v.y0,v.w,v.h)}
  const g=X.createRadialGradient(640,360,300,640,360,900);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(5,0,20,.35)');X.fillStyle=g;X.fillRect(v.x0,v.y0,v.w,v.h)};
+
+// телефон в ландшафте: крупнее кнопки, герои, цифры (картина и так на весь экран)
+function PK(){return (('ontouchstart' in window)||navigator.maxTouchPoints>0)&&H<=520?1.22:1}
+{const _btn=btn;btn=function(id,x,y,w,h,label,fn,o){o=o||{};const k=PK();if(k>1){w*=k;h*=k;if(o.fs)o={...o,fs:o.fs*k}}return _btn(id,x,y,w,h,label,fn,o)}}
+{const _dh=drawHero;drawHero=function(c){const k=PK();if(k===1||scene==='title'||scene==='intro'||scene==='fin')return _dh(c);const h0=c.h;c.h=h0*Math.min(k,1.12);try{return _dh(c)}finally{c.h=h0}}}
+{const _t=txt;txt=function(t,x,y,size,col,o){const k=PK();if(k>1&&/^\d{1,3}$/.test(String(t))){const mn=28/(.72*S);if(size<mn)size=Math.min(mn,size*1.6)}return _t(t,x,y,size,col,o)}}
