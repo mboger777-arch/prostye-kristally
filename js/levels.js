@@ -4,7 +4,7 @@ const LNAMES=['Кодовый замок','Кристальная шахта','�
 const ROUNDS=[3,6,5,6,3];
 let LV=null;
 // ---------- заставка ----------
-SC.title={enter(){cast=[{n:'granit',x:170,y:700,h:300},{n:'iskorka',x:330,y:700,h:270},{n:'shester',x:1110,y:700,h:290}]},
+SC.title={enter(){cast=[{n:'granit',x:165,y:725,h:410},{n:'iskorka',x:375,y:725,h:370},{n:'shester',x:1120,y:725,h:400}]},
  draw(){bgDraw('title');motes(190);drawCast();
   {const lg=UA.logo;if(okI(lg)){const w=760,h=w*lg.naturalHeight/lg.naturalWidth;X.save();X.translate(640,150+Math.sin(T*1.5)*5);X.drawImage(lg,-w/2,-h/2,w,h);X.restore()}}
   win('scroll_banner',400,236,480,74);
@@ -12,13 +12,13 @@ SC.title={enter(){cast=[{n:'granit',x:170,y:700,h:300},{n:'iskorka',x:330,y:700,
   for(let i=0;i<5;i++)gem(470+i*85,350+Math.sin(T*2+i)*8,26,[190,280,320,45,150][i],[2,3,5,7,11][i]);},
  ui(){btn('play',640,470,300,96,'Играть!',()=>{go('intro')},{pulse:1,hue:35,fs:46})}};
 // ---------- вступление ----------
-SC.intro={enter(){cast=[{n:'granit',x:230,y:690,h:330},{n:'iskorka',x:430,y:690,h:300},{n:'shester',x:620,y:690,h:310},{n:'troll',x:1050,y:700,h:470,flip:1}];
+SC.intro={enter(){cast=[{n:'granit',x:190,y:730,h:440},{n:'iskorka',x:405,y:730,h:400},{n:'shester',x:610,y:730,h:400},{n:'troll',x:1080,y:745,h:600,flip:1}];
  run(async()=>{for(const k of['p1','p2','p3','p4','p5','p6']){if(scene!=='intro')return;if(k==='p5'){swing('troll');setTimeout(()=>{shake=16;SFX.hit()},350);mood('troll','laugh')}if(k==='p6')cheer();await say(k)}if(scene==='intro')go('map')})},
  draw(){bgDraw('l5',.15);motes(280);drawCast()},
  ui(){btn('skip',1180,50,170,60,'Дальше ›',()=>go('map'),{always:1,hue:200,fs:28})}};
 // ---------- карта ----------
 const MP=[[220,470],[440,360],[650,470],[860,360],[1070,450]];
-SC.map={enter(){cast=[{n:'iskorka',x:110,y:715,h:200}];if(!SV.seenMap){SV.seenMap=1;save();run(()=>say('map'))}},
+SC.map={enter(){cast=[{n:'iskorka',x:115,y:735,h:280}];if(!SV.seenMap){SV.seenMap=1;save();run(()=>say('map'))}},
  draw(){bgDraw('title',.35);motes(220);
   for(let i=1;i<MP.length;i++){const a={x:MP[i-1][0],y:MP[i-1][1]},b={x:MP[i][0],y:MP[i][1]};vine(bezPts(a,b,16),7,i<SV.open)}
   win('scroll_banner',430,22,420,96);txt('Карта пещеры',640,70,50,'#6a3410',{st:'rgba(255,245,215,.85)',lw:5});
@@ -52,12 +52,12 @@ function endPanel(n){const v=vis();X.fillStyle='rgba(5,2,15,.45)';X.fillRect(v.x
 // ---------- УРОВЕНЬ 1: кодовый замок (перебор) ----------
 function perms(ds,len,rep){const out=[];(function rec(p){if(p.length===len){out.push(p.join(''));return}for(const d of ds){if(!rep&&p.includes(d))continue;rec(p.concat(d))}})([]);return out}
 const R1=[{ds:[1,2,3],len:3,rep:false,k:'l1i',dk:'l1d0'},{ds:[1,2,3],len:2,rep:true,k:'l1q1',dk:'l1d1'},{ds:[1,2,3,4],len:2,rep:false,k:'l1q2',dk:'l1d2',quiz:[7,12,16]}];
-DEF[1]={init(L){L.cast=[{n:'shester',x:110,y:712,h:230},{n:'iskorka',x:240,y:712,h:200}];setR1(L)},
+DEF[1]={init(L){L.cast=[{n:'shester',x:100,y:735,h:320},{n:'iskorka',x:228,y:745,h:265}];setR1(L)},
  async start(L){await say(R1[0].k)},
- draw(L){const R=L.R;panel(290,105,350,500);txt('Замок '+(L.r+1),465,165,34,'#ffe9a8');
-  const n=R.len,sw=70;for(let i=0;i<n;i++){const x=465-(n-1)*sw/2+i*sw,y=225;const ew=L.err&&T-L.err<.5?Math.sin(T*60)*4:0;dimg('tile',x-31+ew,y-34,62,62);
-   const d=R.quiz?'?':L.cur[i];if(d!=null)txt(String(d),x,y-3,44,R.quiz?'#c8e0f0':'#fff3c0',{st:'#2a1406',lw:6})}
-  if(!R.quiz)txt('Найдено: '+L.found.length+' из '+L.all.length,465,292,28,'#fff');
+ draw(L){const R=L.R;panel(290,105,350,500);txt('Замок '+(L.r+1),465,160,40,'#ffe9a8');
+  const n=R.len,sw=106;for(let i=0;i<n;i++){const x=465-(n-1)*sw/2+i*sw,y=225;const ew=L.err&&T-L.err<.5?Math.sin(T*60)*4:0;dimg('tile',x-48+ew,y-50,96,96);
+   const d=R.quiz?'?':L.cur[i];if(d!=null)txt(String(d),x,y-2,72,R.quiz?'#c8e0f0':'#fff3c0',{st:'#2a1406',lw:9})}
+  if(!R.quiz)txt('Найдено: '+L.found.length+' из '+L.all.length,465,318,40,'#fff',{st:'#2a1406',lw:7});
   if(L.msg){X.font='22px '+BODY;X.font='22px '+FONT;const ml=wrap(L.msg.t,270);ml.forEach((l,i)=>txt(l,465,(R.quiz?296:525)+i*26-(R.quiz?0:(ml.length-1)*13),22,L.msg.col,{lw:4}))}
   // дерево вариантов
   const tr=L.tree;const grow=R.quiz?(L.qDone?ease((T-L.qDone)*.8):0):1;
@@ -65,11 +65,11 @@ DEF[1]={init(L){L.cast=[{n:'shester',x:110,y:712,h:230},{n:'iskorka',x:240,y:712
     X.globalAlpha=a;vine(bezPts({x:nd.par.x+14,y:nd.par.y},{x:nd.x-12,y:nd.y},14),lit?5:3,lit);X.globalAlpha=1}
    for(const nd of tr.nodes){const a=R.quiz?clamp(grow*R.len-nd.d+1,0,1):1;if(a<=0)continue;const lit=nd.d===0||L.found.some(c=>c.startsWith(nd.code))||L.qDone;const hl=L.hint&&L.hint.startsWith(nd.code)&&nd.d>0&&T-L.hintT<6;
     if(nd.d===0){gem(nd.x,nd.y,22,45,'',{alpha:a});lock(nd.x,nd.y+2);continue}
-    gem(nd.x,nd.y,nd.leaf?13:16,lit?48:250,nd.leaf?'':nd.code.slice(-1),{grey:!lit&&!hl,alpha:a*(lit||hl?1:.8),glow:lit?1:hl?1.5:0,sc:hl?1+.15*Math.sin(T*8):1,fs:20});
-    if(nd.leaf)txt(nd.code,nd.x+24,nd.y+1,24,lit?'#fff3b0':hl?'#7ff6ff':'#9a90b8',{al:'left',f:FONT,lw:4})}}
+    gem(nd.x,nd.y,nd.leaf?13:22,lit?48:250,nd.leaf?'':nd.code.slice(-1),{grey:!lit&&!hl,alpha:a*(lit||hl?1:.8),glow:lit?1:hl?1.5:0,sc:hl?1+.15*Math.sin(T*8):1,fs:34});
+    if(nd.leaf)txt(nd.code,nd.x+20,nd.y+1,R.len>2?34:40,lit?'#fff3b0':hl?'#7ff6ff':'#9a90b8',{al:'left',f:FONT,lw:6,st:'#1a0c04'})}}
   else{txt('?',920,360,160,'rgba(255,255,255,.25)',{f:FONT})}},
- over(L){const R=L.R;if(L.done)return;if(R.quiz&&!L.qDone){R.quiz.forEach((v,i)=>btn('q'+v,465,370+i*72,150,58,String(v),()=>quiz1(L,v),{hue:200+i*40,fs:36}))}
-  else if(!R.quiz){R.ds.forEach((d,i)=>{const x=465-(R.ds.length-1)*40+i*80;btn('d'+d,x,370,68,68,String(d),()=>dig1(L,d),{hue:185,fs:40})});btn('del',465,450,150,52,'Стереть',()=>{L.cur=[]},{hue:0,fs:26})}},
+ over(L){const R=L.R;if(L.done)return;if(R.quiz&&!L.qDone){R.quiz.forEach((v,i)=>btn('q'+v,465,370+i*74,150,64,String(v),()=>quiz1(L,v),{hue:200+i*40,fs:52}))}
+  else if(!R.quiz){R.ds.forEach((d,i)=>{const x=465-(R.ds.length-1)*43+i*86;btn('d'+d,x,395,78,78,String(d),()=>dig1(L,d),{hue:185,fs:64})});btn('del',465,478,150,52,'Стереть',()=>{L.cur=[]},{hue:0,fs:26})}},
  tap(){},
  async hint(L){if(L.R.quiz){await say('l1w2');return}L.hint=L.all.find(c=>!L.found.includes(c));L.hintT=T;await say('l1h')},
  wrong(L){const R=L.R;if(R.quiz){quiz1(L,R.quiz[0]);return}const ws=R.rep?(L.found[0]||null):String(R.ds[0]).repeat(2)+R.ds[1];
@@ -90,16 +90,16 @@ function quiz1(L,v){if(G.busy||L.done)return;run(async()=>{if(v!==L.all.length){
 levelScene(1);
 // ---------- УРОВЕНЬ 2: раскол кристаллов ----------
 const EASY2=[9,7,15,11,21,13,25,17];
-DEF[2]={init(L){L.cast=[{n:'granit',x:330,y:705,h:330},{n:'iskorka',x:120,y:712,h:220}];L.used=[];L.lastWrong=false;L.gallery=[];next2(L)},
+DEF[2]={init(L){L.cast=[{n:'granit',x:290,y:735,h:440},{n:'iskorka',x:105,y:735,h:300}];L.used=[];L.lastWrong=false;L.gallery=[];next2(L)},
  async start(L){await say('l2i')},
  draw(L){const gx=720,gy=360;
   if(L.pieces){const k=ease((T-L.pieces.t0)*2.2);const[p,q]=L.pieces.f;gem(gx-170*k,gy+30*k,62,L.hue,p,{rot:-.3*k,glow:1});gem(gx+170*k,gy+30*k,62,L.hue+30,q,{rot:.3*k,glow:1});
-   if(k>.6)txt(L.num+' = '+p+' × '+q,gx,gy+150,52,'#fff3b0')}
+   if(k>.6)txt(L.num+' = '+p+' × '+q,gx,gy+150,60,'#fff3b0',{st:'#1a0c04',lw:9})}
   else{const wob=L.wob&&T-L.wob<.6?Math.sin((T-L.wob)*40)*.1*(1-(T-L.wob)/.6):0;const fl=L.flash&&T-L.flash<.8?1.8:1;gem(gx,gy+Math.sin(T*1.8)*6,96,L.hue,L.num,{rot:wob,glow:fl,fs:84})}
   // кирка
   if(L.axe!=null){const t=T-L.axe;let a=t<.35?-1.2+ease(t/.35)*1.6:L.prime?.4-Math.sin(clamp((t-.35)*6,0,3.14))*.9:.4;X.save();X.translate(900,260);X.rotate(a);
    X.rotate(-.65);dimg('pickaxe',-60,-35,200,210);X.restore()}
-  L.gallery.forEach((g,i)=>gem(470+i*50,630,14,g.p?48:200,g.n,{fs:14,glow:g.p?1:.3}))},
+  L.gallery.forEach((g,i)=>gem(470+i*62,630,24,g.p?48:200,g.n,{fs:34,glow:g.p?1:.3}))},
  over(L){if(L.phase==='ask'&&!L.done){btn('prime',560,560,240,74,'Простое',()=>ans2(L,true),{hue:45,fs:38});btn('comp',880,560,260,74,'Составное',()=>ans2(L,false),{hue:205,fs:38})}},
  tap(){},
  async hint(L){await say('l2h')},
@@ -118,17 +118,17 @@ levelScene(2);
 // ---------- УРОВЕНЬ 3: решето Эратосфена ----------
 const STEPS3=[1,2,3,5,7],SK3=['l3s1','l3s2','l3s3','l3s5','l3s7'],CX3=150,CY3=104,CW3=78,CH3=56;
 function cell3(n){const i=n-1;return{x:CX3+(i%10)*CW3+CW3/2,y:CY3+Math.floor(i/10)*CH3+CH3/2}}
-DEF[3]={init(L){L.cast=[{n:'iskorka',x:62,y:715,h:150},{n:'granit',x:1200,y:715,h:175,flip:1}];L.st=new Array(101).fill(0);L.wt={};L.bad={};L.cnt=0},
+DEF[3]={init(L){L.cast=[{n:'iskorka',x:45,y:750,h:210},{n:'granit',x:1215,y:755,h:240,flip:1}];L.st=new Array(101).fill(0);L.wt={};L.bad={};L.cnt=0},
  async start(L){await say('l3i');await say(SK3[0])},
  draw(L){win('frame',CX3-32,CY3-28,CW3*10+64,CH3*10+56);
   for(let n=1;n<=100;n++){const{x,y}=cell3(n),s=L.st[n];const hl=L.hintN===n&&T-L.hintT<5;
    if(s!==2){const sh=L.bad[n]&&T-L.bad[n]<.6?Math.sin(T*60)*3:0;if(s===3){const k=clamp((T-(L.wt[n]||0))*2.5,0,1);dimg('tile',x-CW3/2+sh,y-CH3/2-1,CW3,CH3+2);X.save();X.globalAlpha=k;dimg('tile_water',x-CW3/2,y-CH3/2-1,CW3,CH3+2);X.restore()}else dimg('tile',x-CW3/2+sh,y-CH3/2-1,CW3,CH3+2,{grey:s===1})}
-   if(s===2){gem(x,y,25,[45,190,300,150,20][n%5],n,{fs:n>99?24:30,glow:1.1});continue}
+   if(s===2){gem(x,y,25,[45,190,300,150,20][n%5],n,{fs:n>99?34:44,glow:1.1});continue}
    let a=1,col='#4a2c12',dy=0;if(s===3){const k=clamp((T-(L.wt[n]||0))*2.5,0,1);a=1-.45*k;dy=k*2;col='#2a6c90'}if(s===1)col='#777';
    if(L.bad[n]&&T-L.bad[n]<.6){col='#d02020';x+Math.sin(T*50)*3}
-   X.globalAlpha=s===3?a+.15:1;const bd=L.bad[n]&&T-L.bad[n]<.6;txt(String(n),x+(bd?Math.sin(T*60)*3:0),y+dy,34,hl?'#fff6b0':bd?'#ff9a9a':s===3?'#d8f4ff':s===1?'#b8b8c0':'#fff1d0',{st:hl?'#a05a00':s===3?'#0a3a5a':'#2a1406',lw:hl?6:4});X.globalAlpha=1}
+   X.globalAlpha=s===3?a+.15:1;const bd=L.bad[n]&&T-L.bad[n]<.6;txt(String(n),x+(bd?Math.sin(T*60)*3:0),y+dy,n>99?38:48,hl?'#fff6b0':bd?'#ff9a9a':s===3?'#d8f4ff':s===1?'#b8b8c0':'#fff1d0',{st:hl?'#a05a00':s===3?'#0a3a5a':'#2a1406',lw:hl?8:7});X.globalAlpha=1}
   if(L.wash){win('scroll_banner',962,420,312,92);txt('Смываем кратные '+L.wash,1118,466,26,'#0a3a5a',{st:'rgba(230,250,255,.85)',lw:4})}
-  if(L.cnt){win('sign',962,440,312,80);txt('Простых чисел: '+L.cnt,1118,480,32,'#fff3b0',{st:'#2a1406',lw:5})}},
+  if(L.cnt){win('sign',962,440,312,80);txt('Простых чисел: '+L.cnt,1118,480,36,'#fff3b0',{st:'#2a1406',lw:5})}},
  tap(L,x,y){const c=Math.floor((x-CX3)/CW3),r=Math.floor((y-CY3)/CH3);if(c<0||c>9||r<0||r>9)return;tap3(L,r*10+c+1)},
  async hint(L){L.hintN=STEPS3[L.r];L.hintT=T;await say(SK3[L.r])},
  wrong(L){tap3(L,4)},
@@ -150,7 +150,7 @@ levelScene(3);
 // ---------- УРОВЕНЬ 4: вагонетка ----------
 const PR4=[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97],CO4=[9,15,21,25,27,33,35,39,49,51,57,91];
 function bez(t,y){const a=[600,560],c=[820,560],b=[1170,y];const u=1-t;return{x:u*u*a[0]+2*u*t*c[0]+t*t*b[0],y:u*u*a[1]+2*u*t*c[1]+t*t*b[1]}}
-DEF[4]={init(L){L.cast=[{n:'shester',x:90,y:712,h:180},{n:'iskorka',x:250,y:330,h:150}];L.tl=9;L.scroll=0;L.usedP=[];L.usedC=[];setF4(L)},
+DEF[4]={init(L){L.cast=[{n:'shester',x:90,y:740,h:250},{n:'iskorka',x:250,y:345,h:210}];L.tl=9;L.scroll=0;L.usedP=[];L.usedC=[];setF4(L)},
  async start(L){await say('l4i');L.phase='go';L.t0=T},
  draw(L){const moving=L.phase==='go'||L.phase==='ride'||L.phase==='back';
   if(L.phase==='go'){const k=(T-L.t0)/L.tl;L.cx=140+460*Math.min(1,k);if(k>=1){L.phase='wait';run(async()=>{SFX.bad();await say('l4slow');await say('l4h')});L.tl=Math.min(14,L.tl+2)}}
@@ -159,7 +159,7 @@ DEF[4]={init(L){L.cast=[{n:'shester',x:90,y:712,h:180},{n:'iskorka',x:250,y:330,
   const rail=(pts,on)=>railPainted(pts,on,0);
   railPainted([{x:-60,y:560},{x:600,y:560}],false,-L.scroll);
   L.opts.forEach((o,i)=>{const pts=[];for(let t=0;t<=1.001;t+=.05)pts.push(bez(t,o.y));rail(pts,L.sel===i);const e=bez(1,o.y);X.save();X.translate(e.x,e.y);X.rotate(Math.PI/2);dimg('plank',-34,-9,68,18);X.restore();
-   const g=bez(.82,o.y);o.gx=g.x;o.gy=g.y-58;const bad=o.dead&&T-o.dead<3;if(bad)gem(o.gx,o.gy,40,0,o.n,{fs:34,crack:1,glow:0});else gem(o.gx,o.gy,40,o.hue,o.n,{fs:36,glow:1.1,grey:o.tried})});
+   const g=bez(.82,o.y);o.gx=g.x;o.gy=g.y-72;const bad=o.dead&&T-o.dead<3;if(bad)gem(o.gx,o.gy,54,0,o.n,{fs:64,crack:1,glow:0});else gem(o.gx,o.gy,54,o.hue,o.n,{fs:66,glow:1.1,grey:o.tried})});
   // вагонетка
   let p={x:L.cx,y:560},ang=0;if(L.ride!=null){const t=L.ride;p=bez(t,L.opts[L.sel].y);const q=bez(Math.min(1,t+.02),L.opts[L.sel].y);ang=Math.atan2(q.y-p.y,q.x-p.x)}
   cart(p.x,p.y,ang,L.scroll)},
@@ -177,16 +177,16 @@ function pick4(L,i){if(G.busy||L.done)return;const o=L.opts[i];L.sel=i;const pre
   await say(LINES['n'+o.n]?'l4w':'l4w');if(LINES['n'+o.n])await say('n'+o.n);t0=T;while(T-t0<dur){L.ride=to*(1-ease((T-t0)/dur));await new Promise(r=>requestAnimationFrame(r))}L.ride=null;L.sel=null;L.cx=600;L.phase='wait'}})}
 levelScene(4);
 // ---------- УРОВЕНЬ 5: босс — дерево множителей ----------
-DEF[5]={init(L){L.cast=[{n:'granit',x:100,y:712,h:220},{n:'iskorka',x:235,y:712,h:200},{n:'troll',x:1110,y:712,h:400,flip:1}];L.hearts=3;L.nums=[12,30,84];setB(L)},
+DEF[5]={init(L){L.cast=[{n:'granit',x:95,y:735,h:300},{n:'iskorka',x:250,y:740,h:270},{n:'troll',x:1125,y:745,h:550,flip:1}];L.hearts=3;L.nums=[12,30,84];setB(L)},
  async start(L){await say('l5i');await smash(L)},
  draw(L){for(let i=0;i<3;i++){X.save();X.translate(1030+i*48,140);X.scale(1+(i===L.hearts&&T-(L.hitT||0)<.6?.5:0),1);heart(i<L.hearts);X.restore()}
   for(const nd of L.nodes){if(nd.par)vine([{x:nd.par.x,y:nd.par.y+40},{x:nd.x,y:nd.y-40}],6,true)}
   for(const nd of L.nodes){const k=ease((T-nd.t0)*3);if(L.rebuild&&nd.prime)continue;const cur=nd===L.cur;
-   gem(nd.x,nd.y,nd.d===0?54:40,nd.prime?48:cur?280:250,nd.v,{sc:.3+.7*k,crack:!nd.prime&&nd.split?1:0,glow:nd.prime?1.3:cur?1+.3*Math.sin(T*6):.4,grey:nd.split&&!nd.prime,alpha:nd.split&&!nd.prime?.6:1,fs:nd.d===0?46:34,rot:cur&&L.wob&&T-L.wob<.5?Math.sin((T-L.wob)*40)*.1:0})}
+   gem(nd.x,nd.y,nd.d===0?62:48,nd.prime?48:cur?280:250,nd.v,{sc:.3+.7*k,crack:!nd.prime&&nd.split?1:0,glow:nd.prime?1.3:cur?1+.3*Math.sin(T*6):.4,grey:nd.split&&!nd.prime,alpha:nd.split&&!nd.prime?.6:1,fs:nd.d===0?70:56,rot:cur&&L.wob&&T-L.wob<.5?Math.sin((T-L.wob)*40)*.1:0})}
   if(L.rebuild){const ps=L.nodes.filter(n=>n.prime);const k=ease((T-L.rebuild)*1.5);const n=ps.length,x0=640-(n-1)*70;
-   ps.forEach((p,i)=>{const tx=x0+i*140,ty=560;gem(p.x+(tx-p.x)*k,p.y+(ty-p.y)*k,34,48,p.v,{fs:30,glow:1.3});if(i&&k>.9)txt('×',tx-70,ty,40,'#fff')});
-   if(k>.95)txt('= '+L.N,x0+(n-1)*140+100,560,50,'#fff3b0',{al:'left'})}},
- over(L){if(L.done||!L.cur)return;[2,3,5,7].forEach((p,i)=>btn('p'+p,440+i*110,650,90,70,String(p),()=>pickB(L,p),{hue:[45,190,300,150][i],fs:40}))},
+   ps.forEach((p,i)=>{const tx=x0+i*140,ty=560;gem(p.x+(tx-p.x)*k,p.y+(ty-p.y)*k,44,48,p.v,{fs:56,glow:1.3});if(i&&k>.9)txt('×',tx-70,ty,60,'#fff',{st:'#1a0c04',lw:8})});
+   if(k>.95)txt('= '+L.N,x0+(n-1)*140+80,560,66,'#fff3b0',{al:'left',st:'#1a0c04',lw:9})}},
+ over(L){if(L.done||!L.cur)return;[2,3,5,7].forEach((p,i)=>btn('p'+p,440+i*110,650,90,70,String(p),()=>pickB(L,p),{hue:[45,190,300,150][i],fs:64}))},
  tap(){},
  async hint(L){await say('l5h')},
  wrong(L){if(!L.cur)return;const p=[2,3,5,7].find(p=>L.cur.v%p!==0);pickB(L,p)},
@@ -210,7 +210,7 @@ const SECRETS=[{k:'s1',q:'Сколько трёхзначных кодов из 
  {k:'s3',q:'Простые близнецы отличаются на 2. Найди пару близнецов!',o:['11 и 13','13 и 15','23 и 25'],a:0,why:'15 = 3 × 5 и 25 = 5 × 5 — составные. А 11 и 13 — оба простые.'},
  {k:'s4',q:'Какое единственное чётное простое число?',o:['2','4','6'],a:0,why:'Все остальные чётные числа делятся на 2: 4 = 2 × 2, 6 = 2 × 3.'}];
 let SEC=null;
-SC.secret={enter(n){SEC={n,i:n-1,why:null};cast=[{n:'shester',x:150,y:712,h:240}];run(async()=>{await say('sec');await say(SECRETS[n-1].k)})},
+SC.secret={enter(n){SEC={n,i:n-1,why:null};cast=[{n:'shester',x:140,y:735,h:330}];run(async()=>{await say('sec');await say(SECRETS[n-1].k)})},
  draw(){bgDraw('l'+SEC.n,.55);motes(320);const s=SECRETS[SEC.i];panel(270,60,740,470);txt('Тайная комната',640,140,44,'#ffd6f5');
   X.font='28px '+FONT;wrap(s.q,560).forEach((l,i)=>txt(l,640,200+i*36,28,'#fff'));
   if(SEC.why){X.font='23px '+FONT;wrap(SEC.why,560).forEach((l,i)=>txt(l,640,410+i*29,23,SEC.ok?'#b0ffc8':'#ffd0d0',{lw:4}))}
@@ -220,7 +220,7 @@ SC.secret={enter(n){SEC={n,i:n-1,why:null};cast=[{n:'shester',x:150,y:712,h:240}
 function ansS(i){if(G.busy)return;const s=SECRETS[SEC.i];run(async()=>{if(i!==s.a){SFX.bad();oops('shester');SEC.why=s.why;await say('secw');return}
  SEC.ok=1;SEC.why=s.why;SV.secret[SEC.i]=1;save();SFX.star();burst(640,330,50,'spark',320);burst(640,330,30,'shard',320);cheer();await say('secok');await wait(600);go('l'+SEC.n)})}
 // ---------- финал ----------
-SC.fin={enter(){cast=[{n:'granit',x:260,y:705,h:300},{n:'iskorka',x:450,y:705,h:280},{n:'shester',x:640,y:705,h:290},{n:'troll',x:980,y:712,h:420,flip:1}];
+SC.fin={enter(){cast=[{n:'granit',x:230,y:730,h:410},{n:'iskorka',x:450,y:730,h:380},{n:'shester',x:640,y:730,h:390},{n:'troll',x:1110,y:750,h:480,flip:1}];
  run(async()=>{cheer();await say('fin');await say('l5end')})},
  draw(){bgDraw('title',.1);motes(48);if(Math.random()<.2)burst(rnd(100,1180),rnd(80,300),10,Math.random()<.5?'spark':'shard',rnd(0,360),.6);if(Math.random()<.01)cheer();
   win('scroll_banner',330,40,620,140);txt('Пещера спасена!',640,110,70,'#7a3a0a',{st:'rgba(255,245,215,.9)',lw:6});const st=SV.stars.reduce((a,b)=>a+b,0);for(let i=0;i<5;i++)star(520+i*60,205,22,true);win('sign',330,232,620,66);txt('Звёзд: '+st+' из 15 · редких кристаллов: '+SV.secret.reduce((a,b)=>a+b,0)+' из 4',640,266,26,'#ffe9b8',{st:'#2a1406',lw:4});drawCast()},
