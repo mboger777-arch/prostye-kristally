@@ -4,8 +4,8 @@ const UA={};function ua(n){const i=new Image();i.src='assets/ui/'+n+'.png';UA[n]
 ['btn_purple','btn_teal','btn_round','scroll_banner','star','sign','frame','logo','win_dialog','win_hint','win_victory','win_mistake','bubble','node',
  'gem_purple','gem_teal','gem_amber','gem_broken','cart','pickaxe','heart','heart_grey','tile','tile_water','lock','plank','tex_gold','tex_steel'].forEach(ua);
 const SHARDS=[],SPL=[];for(let i=0;i<15;i++)SHARDS.push(ua('p_shards'+i));for(let i=0;i<7;i++)SPL.push(ua('p_splash'+i));
-const VIS={};['granit','iskorka','shester','troll'].forEach(w=>{VIS[w]=(w==='troll'?[0,1,2,3,4,5,6]:[0,1,2,3,4,5]).map(i=>ua('v_'+w+i))});
-const BODY2={shester:ua('../sprites/shester_body')};
+const VIS={granit:[],iskorka:[],shester:[],troll:[]};
+const BODY2={};
 const HF={"granit": [0.3241, -0.0196, 0.6213, 0.4439], "iskorka": [0.0786, 0.146, 0.6717, 0.4247], "shester": [-0.0409, -0.0826, 0.8664, 0.6534], "troll": [0.4677, -0.0177, 0.3096, 0.4668]};
 const okI=i=>i&&i.complete&&i.naturalWidth>0;
 // серые варианты (заблокировано/не горит) — из той же картинки
@@ -72,7 +72,7 @@ function railPainted(pts,on,scroll){// шпалы — нарисованные �
   if(on){X.globalCompositeOperation='lighter';X.globalAlpha=.35+.2*Math.sin(T*6);X.lineWidth=5;X.strokeStyle=pat('tex_gold')||'#000';X.stroke()}X.restore()})}
 function cart(x,y,a,sc){X.save();X.translate(x,y);X.rotate(a);
  const im=IM.granit;if(okI(im)){const h=200,w=h*im.width/im.height;X.save();X.beginPath();X.rect(-90,-240,180,200);X.clip();X.drawImage(im,-w/2,-190+Math.abs(Math.sin(T*8))*3,w,h);
-  const v=VIS.granit[visFor({n:'granit'})];const f=HF.granit;if(okI(v))X.drawImage(v,-w/2+f[0]*w,-190+Math.abs(Math.sin(T*8))*3+f[1]*h,f[2]*w,f[3]*h);X.restore()}
+X.restore()}
  const c=UA.cart;if(okI(c)){const w=170,h=w*c.naturalHeight/c.naturalWidth;X.drawImage(c,-w/2,-h+18+Math.sin(sc*.8)*1.5,w,h)}X.restore()}
 // ---- частицы: нарисованные осколки, брызги, искры-звёздочки ----
 function drawParticles(){for(const p of PS){X.save();X.globalAlpha=Math.min(1,p.life*1.5);X.translate(p.x,p.y);X.rotate(p.rot);
@@ -116,13 +116,12 @@ function drawHero(c){const im=IM[c.n],R=RIG[c.n];if(!okI(im))return;const ph=c.x
  X.save();X.translate(c.x,c.y);
  const sg=X.createRadialGradient(0,0,2,0,0,w*.42);sg.addColorStop(0,'rgba(0,0,0,.42)');sg.addColorStop(1,'rgba(0,0,0,0)');X.save();X.scale(1,.16);X.fillStyle=sg;X.beginPath();X.arc(0,0,w*.42*(1+dy/250),0,7);X.fill();X.restore();
  X.translate(0,dy);X.rotate(rot);X.scale(sx*(c.flip?-1:1),sy);X.translate(-w/2,-h);
- const body=BODY2[c.n]&&okI(BODY2[c.n])?BODY2[c.n]:im;
+ const body=im;
  const rects=[R.head.r,...R.parts.map(p=>p.r)];
  X.save();clipExcept(w,h,rects);X.drawImage(body,0,0,w,h);X.restore();
  R.parts.forEach(p=>drawPart(body,w,h,p.r,p.p,p.f?p.f(T+ph,c):0,p.sx?p.sx(T+ph,c):null));
  X.save();const hp=R.head.p;X.translate(hp[0]*w,hp[1]*h);X.rotate(headA);X.translate(-hp[0]*w,-hp[1]*h);
  X.save();X.beginPath();const hr=R.head.r;X.rect(hr[0]*w-1,hr[1]*h-1,(hr[2]-hr[0])*w+2,(hr[3]-hr[1])*h+2);X.clip();X.drawImage(body,0,0,w,h);X.restore();
- let vf=visFor(c);if(blinkOn(c)&&vf===0)vf=5;const f=HF[c.n],v=VIS[c.n][vf];if(okI(v))X.drawImage(v,f[0]*w,f[1]*h,f[2]*w,f[3]*h);
  X.restore();X.restore();
  if(puz>0&&c.n!=='troll'){const hx2=c.x+(c.flip?-1:1)*(R.head.p[0]-.5)*w,hy=c.y-h*1.02+dy;txt('?',hx2+Math.sin(T*6)*4,hy-10*Math.sin(puz*3),44*Math.min(1,puz*3),'#ffe066')}
  if(c.mood==='laugh'&&T-c.moodT<1.5)txt('Ха-ха!',c.x,c.y-h*1.05,40,'#c8ff9a')}

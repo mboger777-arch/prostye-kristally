@@ -69,20 +69,26 @@ function drawCast(){cast.forEach(drawHero)}
 // ---- сцены ----
 const SC={};let scene='title',SCN=null;
 function go(n,arg){scene=n;SCN=SC[n];fade=1;talk=null;if(skipTalk)skipTalk();SCN.enter&&SCN.enter(arg)}
-C.addEventListener('pointerdown',e=>{ac();const x=(e.clientX-OX)/S,y=(e.clientY-OY)/S;PX=x;PY=y;
+C.addEventListener('pointerdown',e=>{if(PORTRAIT())return;ac();const x=(e.clientX-OX)/S,y=(e.clientY-OY)/S;PX=x;PY=y;
  for(let i=UI.length-1;i>=0;i--){const b=UI[i];if(Math.abs(x-b.x)<b.w/2+6&&Math.abs(y-b.y)<b.h/2+6){if(b.dis||(G._busy&&!b.always))return;SFX.click();b.fn();return}}
  if(talk&&talk.box&&skipTalk){const[bx,by,bw,bh]=talk.box;if(x>bx&&x<bx+bw&&y>by&&y<by+bh){skipTalk();return}}
  if(SCN&&SCN.tap)SCN.tap(x,y)});
 C.addEventListener('pointermove',e=>{PX=(e.clientX-OX)/S;PY=(e.clientY-OY)/S});
 let last=performance.now(),fpsA=60;
-function loop(now){DT=clamp((now-last)/1000,0,.05);last=now;T+=DT;fpsA=fpsA*.95+(1/Math.max(DT,.001))*.05;
+const PORTRAIT=()=>innerHeight>innerWidth*1.05;
+function loop(now){DT=PORTRAIT()?0:clamp((now-last)/1000,0,.05);last=now;T+=DT;fpsA=fpsA*.95+(1/Math.max(DT,.001))*.05;
  X.setTransform(DPR,0,0,DPR,0,0);X.fillStyle='#0b0718';X.fillRect(0,0,W,H);
  const sx=(Math.random()-.5)*shake,sy=(Math.random()-.5)*shake;shake*=Math.pow(.004,DT);if(shake<.3)shake=0;
  X.setTransform(DPR*S,0,0,DPR*S,DPR*(OX+sx),DPR*(OY+sy));UI=[];stepParticles();
  try{SCN&&SCN.draw()}catch(e){console.error(e)}
  drawParticles();drawTalk();if(SCN&&SCN.ui)SCN.ui();
  if(fade>0){const v=vis();X.fillStyle=`rgba(8,4,20,${fade})`;X.fillRect(v.x0,v.y0,v.w,v.h);fade=Math.max(0,fade-DT*2.5)}
+ if(PORTRAIT())drawRotate();
  requestAnimationFrame(loop)}
+// поверни телефон: нарисованный свиток со сказочной надписью, игра на паузе
+let rotT=0;function drawRotate(){rotT+=1/60;X.setTransform(DPR,0,0,DPR,0,0);X.fillStyle='rgba(10,5,0,.72)';X.fillRect(0,0,W,H);
+ const bw=Math.min(W*.92,560),bh=bw*.62,k=1+Math.sin(rotT*2.2)*.03;X.save();X.translate(W/2,H/2);X.rotate(Math.sin(rotT*1.4)*.05);X.scale(k,k);
+ win('scroll_banner',-bw/2,-bh/2,bw,bh);const fs=bw*.105;txt('Поверни',0,-fs*.62,fs,'#6a3410',{st:'rgba(255,245,215,.85)',lw:fs*.14});txt('телефон',0,fs*.62,fs,'#6a3410',{st:'rgba(255,245,215,.85)',lw:fs*.14});X.restore()}
 // тестовый интерфейс
 Object.defineProperty(G,'busy',{get:()=>G._busy>0});Object.defineProperty(G,'scene',{get:()=>scene});
 G.go=n=>go(n);G.S=SV;G.pg=(x,y)=>({x:OX+x*S,y:OY+y*S});G.btns=()=>UI.map(b=>({id:b.id,x:b.x,y:b.y}));G.fps=()=>fpsA;
