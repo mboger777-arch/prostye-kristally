@@ -51,13 +51,16 @@ const SFX={ok(){[1046,1318,1568,2093].forEach((f,i)=>tone(f,.5,'sine',.08,i*.07)
 // ---- голос и реплики ----
 const G={_busy:0,fast:false,mute:false};let talk=null,skipTalk=null;
 function wait(ms){return new Promise(r=>setTimeout(r,G.fast?Math.min(ms,40):ms))}
-async function say(k){const l=LINES[k];if(!l)return;talk={who:l.who,text:l.t,k,t0:T};
- if(G.fast){await wait(60);talk=null;return}
- const v=typeof VOICE!=='undefined'&&VOICE[k];const dur=Math.max(1800,l.t.length*70);
- await new Promise(async res=>{let done=false;const fin=()=>{if(!done){done=true;skipTalk=null;res()}};skipTalk=()=>{if(a)a.pause();fin()};let a=null;
-  if(v&&!G.mute){a=new Audio('assets/voice/'+v[0]);attachAnalyser(a);a.onended=()=>setTimeout(fin,250);a.onerror=()=>setTimeout(fin,dur);let ok=true;try{await a.play()}catch(e){ok=false}
-   if(ok)setTimeout(fin,(v[1]+2)*1000);else setTimeout(fin,dur)}else setTimeout(fin,dur)});
- talk=null}
+let SAYID=0,SAYQ=Promise.resolve(),SAYEP=0;
+function stopTalk(){SAYEP++;if(skipTalk)skipTalk();talk=null}
+function say(k){const ep=SAYEP;const p=SAYQ.then(()=>ep===SAYEP?say1(k):null);SAYQ=p.catch(()=>{});return p}
+async function say1(k){const l=LINES[k];if(!l)return;const id=++SAYID;talk={who:l.who,text:l.t,k,t0:T,id};
+ if(G.fast){await wait(60);if(talk&&talk.id===id)talk=null;return}
+ const v=typeof VOICE!=='undefined'&&VOICE[k];const dur=Math.max(2200,l.t.length*75);
+ await new Promise(async res=>{let done=false,a=null;const fin=()=>{if(!done){done=true;if(a){try{a.pause()}catch(e){}}if(skipTalk===sk)skipTalk=null;res()}};const sk=()=>fin();skipTalk=sk;
+  if(v&&!G.mute){a=new Audio('assets/voice/'+v[0]);try{attachAnalyser(a)}catch(e){}a.onended=()=>setTimeout(fin,350);a.onerror=()=>setTimeout(fin,dur);let ok=true;try{await a.play()}catch(e){ok=false}
+   if(done)return;if(ok)setTimeout(fin,(v[1]+2.5)*1000);else setTimeout(fin,dur)}else setTimeout(fin,dur)});
+ if(talk&&talk.id===id)talk=null}
 async function run(fn){G._busy++;try{await fn()}catch(e){console.error(e)}finally{G._busy--}}
 // ---- частицы ----
 const PS=[];
@@ -90,9 +93,9 @@ function oops(n){const c=cast.find(c=>c.n===n);if(c)c.wob=T}
 function drawCast(){cast.forEach(drawHero)}
 // ---- сцены ----
 const SC={};let scene='title',SCN=null;
-function go(n,arg){scene=n;SCN=SC[n];fade=1;talk=null;if(skipTalk)skipTalk();SCN.enter&&SCN.enter(arg)}
+function go(n,arg){scene=n;SCN=SC[n];fade=1;stopTalk();SCN.enter&&SCN.enter(arg)}
 C.addEventListener('pointerdown',e=>{if(PORTRAIT())return;ac();const x=(e.clientX-VVX-OX)/S,y=(e.clientY-VVY-OY)/S;PX=x;PY=y;
- for(let i=UI.length-1;i>=0;i--){const b=UI[i];if(Math.abs(x-b.x)<b.w/2+6&&Math.abs(y-b.y)<b.h/2+6){if(b.dis||(G._busy&&!b.always))return;SFX.click();b.fn();return}}
+ for(let i=UI.length-1;i>=0;i--){const b=UI[i];if(Math.abs(x-b.x)<b.w/2+6&&Math.abs(y-b.y)<b.h/2+6){if(b.dis)return;if(G._busy&&!b.always){if(b.id==='hint'&&typeof LV!=='undefined'&&LV&&!LV.done&&typeof DEF!=='undefined'&&DEF[LV.n]&&DEF[LV.n].hint){SFX.click();stopTalk();LV.reveal=true;DEF[LV.n].hint(LV)}return}SFX.click();b.fn();return}}
  if(talk&&talk.box&&skipTalk){const[bx,by,bw,bh]=talk.box;if(x>bx&&x<bx+bw&&y>by&&y<by+bh){skipTalk();return}}
  if(SCN&&SCN.tap)SCN.tap(x,y)});
 C.addEventListener('pointermove',e=>{PX=(e.clientX-VVX-OX)/S;PY=(e.clientY-VVY-OY)/S});
@@ -101,9 +104,9 @@ const TOUCH=(('ontouchstart' in window)||navigator.maxTouchPoints>0)&&matchMedia
 function loop(now){DT=PORTRAIT()?0:clamp((now-last)/1000,0,.05);last=now;T+=DT;fpsA=fpsA*.95+(1/Math.max(DT,.001))*.05;
  X.setTransform(DPR,0,0,DPR,0,0);X.clearRect(0,0,W,H);
  const sx=(Math.random()-.5)*shake,sy=(Math.random()-.5)*shake;shake*=Math.pow(.004,DT);if(shake<.3)shake=0;
- X.setTransform(DPR*S,0,0,DPR*S,DPR*(OX+sx),DPR*(OY+sy));UI=[];stepParticles();
+ X.setTransform(DPR*S,0,0,DPR*S,DPR*(OX+sx),DPR*(OY+sy));UI=[];EXB_P=EXB;EXB={c:[],h:[]};stepParticles();
  try{SCN&&SCN.draw()}catch(e){console.error(e)}
- drawParticles();drawTalk();if(SCN&&SCN.ui)SCN.ui();fsButton();
+ drawParticles();if(SCN&&SCN.ui)SCN.ui();fsButton();PUI=UI.slice();drawTalk();
  if(fade>0){const v=vis();X.fillStyle=`rgba(8,4,20,${fade})`;X.fillRect(v.x0,v.y0,v.w,v.h);fade=Math.max(0,fade-DT*2.5)}
  if(PORTRAIT())drawRotate();
  requestAnimationFrame(loop)}

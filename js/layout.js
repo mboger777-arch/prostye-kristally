@@ -54,6 +54,9 @@ bgDraw=function(n,dim,scroll){const v=vis(),s=Math.max(v.w/1280,v.h/720);const m
 
 // телефон в ландшафте: крупнее кнопки, герои, цифры (картина и так на весь экран)
 function PK(){return (('ontouchstart' in window)||navigator.maxTouchPoints>0)&&H<=520?1.22:1}
-{const _btn=btn;btn=function(id,x,y,w,h,label,fn,o){o=o||{};const k=PK();if(k>1){w*=k;h*=k;if(o.fs)o={...o,fs:o.fs*k}}return _btn(id,x,y,w,h,label,fn,o)}}
+{const _btn=btn;btn=function(id,x,y,w,h,label,fn,o){o=o||{};const k=PK();if(k>1){w*=k;h*=k;if(o.fs)o={...o,fs:o.fs*k*.85}}return _btn(id,x,y,w,h,label,fn,o)}}
 {const _dh=drawHero;drawHero=function(c){const k=PK();if(k===1||scene==='title'||scene==='intro'||scene==='fin')return _dh(c);const h0=c.h;c.h=h0*Math.min(k,1.12);try{return _dh(c)}finally{c.h=h0}}}
-{const _t=txt;txt=function(t,x,y,size,col,o){const k=PK();if(k>1&&/^\d{1,3}$/.test(String(t))){const mn=28/(.72*S);if(size<mn)size=Math.min(mn,size*1.6)}return _t(t,x,y,size,col,o)}}
+{const _t=txt;txt=function(t,x,y,size,col,o){const k=PK();{const v=vis(),m=X.getTransform();if(m.a===DPR*S&&m.b===0){const top=v.y0+size*.62+2;if(y<top&&y>v.y0-size)y=top}}if(k>1&&/^\d{1,3}$/.test(String(t))){const mn=28/(.72*S);if(size<mn)size=Math.min(mn,size*1.6)}return _t(t,x,y,size,col,o)}}
+
+// система пояснений из art.js (плашки + облачка, крупно и без наложений) — главная
+drawTalk=EXPL_drawTalk;

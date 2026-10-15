@@ -81,15 +81,49 @@ function drawParticles(){for(const p of PS){X.save();X.globalAlpha=Math.min(1,p.
  else{X.globalCompositeOperation='lighter';const s=p.s*(p.kind==='mote'?3.2:4.5);dimg('star',-s/2,-s/2,s,s)}
  X.restore()}}
 // ---- облачко речи: хрустальный пузырь ----
-function drawTalk(){if(!talk)return;const c=cast.find(c=>c.n===talk.who);const fs=26,lh=32;X.font=fs+'px '+FONT;const side=scene==='l3';const maxW=side?200:c?420:860;const L=wrap(talk.text,maxW);
- const tw=Math.max(...L.map(l=>X.measureText(l).width),c?X.measureText(NAMES[c.n][0]).width:0);const padX=side?40:58,padT=44,padB=74;const bw=side?280:Math.max(240,tw+padX*2),bh=L.length*lh+(c?34:0)+padT+padB;
- const age=T-talk.t0,pop=age<.18?.7+.3*ease(age/.18):1;let bx,by,flip=false;
- if(side){bx=996;by=70;flip=c&&c.x>640}else if(c){const hx2=c.x,hy=c.y-c.h*1.0-(c.jump&&T-c.jump<.75?50:0);flip=c.x>640;bx=flip?hx2-bw+40:hx2-40;bx=clamp(bx,4,1276-bw);by=Math.max(4,hy-bh+30)}else{bx=640-bw/2;by=8}
- X.save();const ox=flip?bx+bw*.85:bx+bw*.15;X.translate(ox,by+bh);X.scale(pop,pop);X.translate(-ox,-by-bh);
- win('bubble',bx,by,bw,bh,flip);
- let y0=by+padT;if(c){txt(NAMES[c.n][0],bx+padX,y0,24,NAMES[c.n][1],{al:'left',st:'#2a1240',lw:5});y0+=34}
- L.forEach((l,i)=>txt(l,bx+padX,y0+i*lh+4,fs,'#3a1468',{al:'left',st:'rgba(255,255,255,.85)',lw:5}));X.restore();
+// ===== Система пояснений (переписана): плашка-пояснение + облачко. Всегда на экране, крупно (≥17px), не на кнопках и героях, не друг на друге =====
+let PUI=[],EXB={c:[],h:[]},EXB_P=EXB;
+function exBox(x0,y0,x1,y1){const m=X.getTransform();const P=[[x0,y0],[x1,y0],[x0,y1],[x1,y1]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(m));const xs=P.map(p=>(p.x/DPR-OX)/S),ys=P.map(p=>(p.y/DPR-OY)/S);return[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]}
+{const _n=nine;nine=function(n,x,y,w,h,l,t,r,b,flip,cap){if(!EXSELF&&X.globalAlpha>.05&&n!=='bubble')EXB.c.push({n,b:exBox(x,y,x+w,y+h)});return _n(n,x,y,w,h,l,t,r,b,flip,cap)}}
+{const _dh=drawHero;drawHero=function(c){const im=IM[c.n];const w=im&&im.naturalWidth?c.h*im.naturalWidth/im.naturalHeight*.8:c.h*.62;EXB.h.push({n:c.n,b:[c.x-w/2,c.y-c.h,c.x+w/2,c.y]});return _dh(c)}}
+let EXSELF=0;
+function ovl(a,b){return Math.max(0,Math.min(a[2],b[2])-Math.max(a[0],b[0]))*Math.max(0,Math.min(a[3],b[3])-Math.max(a[1],b[1]))}
+function minFs(){return Math.max(17,17/Math.max(.1,S))}
+function safeRect(){const v=vis();return[v.x0+SAFE.l/S+6,v.y0+SAFE.t/S+6,v.x0+v.w-SAFE.r/S-6,v.y0+v.h-SAFE.b/S-6]}
+function explCost(r,hard){let h=0,s=0;for(const e of PUI)h+=ovl(r,[e.x-e.w/2-4,e.y-e.h/2-4,e.x+e.w/2+4,e.y+e.h/2+4]);for(const b of hard)if(b)h+=ovl(r,b);
+ for(const q of EXB_P.c)s+=ovl(r,q.b)*(q.n==='frame'?2:1);for(const q of EXB_P.h){const b=q.b;h+=ovl(r,[b[0],b[1],b[2],b[1]+(b[3]-b[1])*.42])*.6;s+=ovl(r,b)*4}if(typeof KEEP!=='undefined')for(const k of KEEP)if(k.w>=2&&k.w<4)s+=ovl(r,k.r)*3;return[h,s]}
+function gridSearch(bw,bh,score){const[x0,y0,x1r,y1r]=safeRect();const x1=Math.max(x0,x1r-bw),y1=Math.max(y0,y1r-bh);let best=null;
+ for(let by=y0;by<=y1+.1;by+=Math.max(6,(y1-y0)/40))for(let bx=x0;bx<=x1+.1;bx+=Math.max(6,(x1-x0)/64)){const sc=score(bx,by);if(!best||sc[0]<best[2][0])best=[bx,by,sc]}return best||[x0,y0,[0,0]]}
+let BAN=null;function CZ(r){return ovl(r,[400,130,880,560])}
+function drawBanner(){const b=typeof LV!=='undefined'&&LV&&String(scene)[0]==='l'&&LV.banner;if(!b){BAN=null;return null}const bad=/ffd0d0|ffb0b0/.test(b.col||'');const key=b.t+'|'+W+'x'+H;
+ if(!BAN||BAN.key!==key||T-BAN.T>.6){const fs=Math.round(Math.max(27,minFs())),[x0,,x1]=safeRect();const maxW=Math.min(1000,x1-x0-40)-fs*4.5;X.font=fs+'px '+FONT;const L=wrap(b.t,maxW),lh=Math.round(fs*1.32);
+  const w=Math.min(x1-x0,Math.max(...L.map(l=>X.measureText(l).width))+fs*(bad?4.6:5.6)),h=L.length*lh+fs*(bad?3.1:2.6);const pref=b.y||96;
+  const p=gridSearch(w,h,(bx,by)=>{const[hh,ss]=explCost([bx,by,bx+w,by+h],[]);return[hh*1e3+ss*8+CZ([bx,by,bx+w,by+h])*10+Math.abs(by-pref)*.8+Math.abs(bx+w/2-640)*.4]});BAN={key,T,fs,L,lh,w,h,x:p[0],y:p[1],bad}}
+ const B=BAN;X.save();window.EXTOP=1;X.globalAlpha=Math.min(1,.15+ease(Math.min(1,(T-b.t0)*4)));EXSELF=1;win(B.bad?'win_mistake':'scroll_banner',B.x,B.y,B.w,B.h);EXSELF=0;const cx=B.x+B.w/2;
+ B.L.forEach((l,i)=>txt(l,cx,B.y+B.h/2+(i-(B.L.length-1)/2)*B.lh,B.fs,B.bad?'#ffe0d8':'#4a2208',B.bad?{lw:5}:{st:'rgba(255,245,215,.85)',lw:4}));X.restore();window.EXTOP=0;return[B.x,B.y,B.x+B.w,B.y+B.h]}
+function bubDims(c,fs,maxW){const lh=Math.round(fs*1.24),nfs=Math.round(fs*.92);X.font=fs+'px '+FONT;const L=wrap(talk.text,maxW);let tw=Math.max(...L.map(l=>X.measureText(l).width));X.font=nfs+'px '+FONT;if(c)tw=Math.max(tw,X.measureText(NAMES[c.n][0]).width);
+ const padX=Math.round(fs*2.1),padT=Math.round(fs*1.7),padB=Math.round(fs*2.8),nh=c?Math.round(fs*1.3):0;return{fs,lh,nfs,nh,L,padX,padT,bw:Math.max(240,tw+padX*2),bh:L.length*lh+nh+padT+padB}}
+const BCFG=[[30,520],[28,600],[28,460],[26,680],[26,400],[24,780],[24,360],[22,880],[30,900],[28,1000]];
+function drawTalk(){return EXPL_drawTalk()}
+function EXPL_drawTalk(){if(typeof KN!=='undefined'){KEEP=KN;KN=[]}const bb=drawBanner();if(!talk)return;const c=cast.find(c=>c.n===talk.who);
+ const key=talk.k+'|'+W+'x'+H+'|'+(bb?bb.map(Math.round).join(','):'');let D,pl;
+ if(talk.dk===key&&talk.D&&T-talk.dT<.6){D=talk.D;pl=talk.dpl}
+ else{const mf=minFs(),[sx0,sy0,sx1,sy1]=safeRect();let best=null;const seen=new Set();const hx=c?c.x:640,hy=c?c.y-c.h*1.05:0;
+  for(const[f0,mw0]of BCFG){const fs=Math.round(Math.max(f0,mf)),mw=Math.min((c?mw0:Math.max(mw0,860))*Math.max(1,fs/30),sx1-sx0-fs*4.5);const kk=fs+'_'+Math.round(mw);if(seen.has(kk))continue;seen.add(kk);
+   const d=bubDims(c,fs,mw);if(d.bw>sx1-sx0||d.bh>sy1-sy0||d.bh>d.bw*.8)continue;
+   const p=gridSearch(d.bw,d.bh,(bx,by)=>{const[h,s]=explCost([bx-4,by-4,bx+d.bw+4,by+d.bh+4],[bb]);const fl=c?hx>bx+d.bw/2:false,tx=fl?bx+d.bw*.85:bx+d.bw*.15,ty=by+d.bh;const dd=c?Math.hypot(tx-hx,ty-hy):Math.abs(bx+d.bw/2-640)+Math.abs(by-60);return[h*1e3+s*12+CZ([bx,by,bx+d.bw,by+d.bh])*3+dd*1.5,h,s,fl]});
+   const sc=p[2][0]+(34-fs)*25+d.bw*.25;if(!best||sc<best[2])best=[d,[p[0],p[1],p[2][3]],sc]}
+  if(!best){const fs=Math.round(mf);const d=bubDims(c,fs,sx1-sx0-fs*4.5);best=[d,[sx0,sy0,false]]}
+  D=best[0];pl=best[1];talk.D=D;talk.dpl=pl;talk.dk=key;talk.dT=T}
+ const{fs,lh,nfs,nh,L,padX,padT,bw,bh}=D;const bx=pl[0],by=pl[1],flip=pl[2];
+ const age=T-talk.t0,pop=age<.18?.7+.3*ease(age/.18):1;
+ window.EXTOP=1;X.save();const ox=flip?bx+bw*.85:bx+bw*.15;X.translate(ox,by+bh);X.scale(pop,pop);X.translate(-ox,-by-bh);
+ EXSELF=1;win('bubble',bx,by,bw,bh,flip);EXSELF=0;
+ let y0=by+padT;if(c){txt(NAMES[c.n][0],bx+padX,y0,nfs,NAMES[c.n][1],{al:'left',st:'#2a1240',lw:5});y0+=nh}
+ L.forEach((l,i)=>txt(l,bx+padX,y0+i*lh+4,fs,'#3a1468',{al:'left',st:'rgba(255,255,255,.85)',lw:5}));X.restore();window.EXTOP=0;
  talk.box=[bx,by,bw,bh]}
+// уровни рисуют свою плашку сами — теперь её рисует система пояснений поверх всего
+for(let n=1;n<=5;n++){const s=SC['l'+n];if(!s||!s.draw)continue;const d=s.draw;s.draw=function(){const b=LV&&LV.banner;if(LV)LV.banner=null;try{return d.apply(this,arguments)}finally{if(LV&&LV.banner===null)LV.banner=b}}}
 // ================= живые герои: нарисованные головы-виземы =================
 // 0 закрыт · 1 приоткрыт · 2 широко · 3 «О» · 4 улыбка/смех
 function visFor(c){if(c.forceV!=null)return c.forceV;const talking=talk&&talk.who===c.n;
