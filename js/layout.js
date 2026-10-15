@@ -45,12 +45,9 @@ function feather(img,key){if(FEATH[key])return FEATH[key];const c=document.creat
  let gr=g.createLinearGradient(0,0,c.width,0);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(e/c.width,'#000');gr.addColorStop(1-e/c.width,'#000');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,c.width,c.height);
  gr=g.createLinearGradient(0,0,0,c.height);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(e/c.height,'#000');gr.addColorStop(1-e/c.height,'#000');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,c.width,c.height);
  return FEATH[key]=c}
-bgDraw=function(n,dim,scroll){const v=vis(),k=Math.max(v.w/1280,v.h/720);const mx=(PX-640)/640,my=(PY-360)/360;
- const b=IM['bg_'+n],f=IM['fg_'+n];const wide=k>1.03;
- if(b&&b.complete&&b.naturalWidth){const ox=-mx*10+Math.sin(T*.21)*4,oy=-my*6+Math.cos(T*.17)*3;
-  if(wide){const s=k*1.06;X.drawImage(blurC(b,'b'+n),640-640*s,360-360*s,1280*s,720*s);
-   const s2=1.025;X.drawImage(feather(b,'b'+n),640-640*s2+ox,360-360*s2+oy,1280*s2,720*s2)}
-  else{const s=k*1.06;X.drawImage(b,640-640*s+ox,360-360*s+oy,1280*s,720*s)}}
- if(f&&f.complete&&f.naturalWidth){const s=(wide?1.04:k)*1.10,ox=-mx*30+Math.sin(T*.21)*9,oy=-my*12;X.drawImage(f,640-640*s+ox,360-360*s+oy+8,1280*s,720*s)}
+bgDraw=function(n,dim,scroll){const v=vis(),s=Math.max(v.w/1280,v.h/720);const mx=(PX-640)/640,my=(PY-360)/360;
+ const b=IM['bg_'+n],f=IM['fg_'+n];
+ if(b&&b.complete&&b.naturalWidth){const ox=-mx*4+Math.sin(T*.21)*2,oy=-my*3+Math.cos(T*.17)*1.5;X.drawImage(b,640-640*s+ox,360-360*s+oy,1280*s,720*s)}
+ if(f&&f.complete&&f.naturalWidth){const ss=s*1.035,ox=-mx*8+Math.sin(T*.21)*4,oy=-my*4;X.drawImage(f,640-640*ss+ox,360-360*ss+oy+6,1280*ss,720*ss)}
  if(dim){X.fillStyle=`rgba(8,4,24,${dim})`;X.fillRect(v.x0,v.y0,v.w,v.h)}
- const g=X.createRadialGradient(640,360,300,640,360,900);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(5,0,20,.55)');X.fillStyle=g;X.fillRect(v.x0,v.y0,v.w,v.h)};
+ const g=X.createRadialGradient(640,360,300,640,360,900);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(5,0,20,.35)');X.fillStyle=g;X.fillRect(v.x0,v.y0,v.w,v.h)};
