@@ -24,7 +24,7 @@ function win(n,x,y,w,h,flip){const s=SL[n];nine(n,x,y,w,h,s[0],s[1],s[2],s[3],fl
 // ---- текст: сказочный шрифт, обводка, тень, градиент ----
 function hx(c){if(typeof c!=='string'||c[0]!=='#')return null;if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]}
 function mix(a,b,k){return`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*k)).join(',')})`}
-function txt(t,x,y,size,col,o){o=o||{};t=String(t);X.font=size+'px '+FONT;X.textAlign=o.al||'center';X.textBaseline='middle';X.lineJoin='round';
+function txt(t,x,y,size,col,o){o=o||{};t=String(t);if(o.maxW){X.font=size+'px '+FONT;const mw=X.measureText(t).width;if(mw>o.maxW)size=size*o.maxW/mw}X.font=size+'px '+FONT;X.textAlign=o.al||'center';X.textBaseline='middle';X.lineJoin='round';
  const c=hx(col||'#fff');X.save();
  if(o.st!==0){X.shadowColor='rgba(0,0,0,.55)';X.shadowBlur=size*.18;X.shadowOffsetY=size*.06;X.lineWidth=o.lw||Math.max(3,size*.17);X.strokeStyle=o.st||'#2a1240';X.strokeText(t,x,y);X.shadowColor='transparent'}
  if(c){const g=X.createLinearGradient(0,y-size*.5,0,y+size*.45);g.addColorStop(0,mix(c,[255,255,255],.65));g.addColorStop(.5,mix(c,[255,255,255],.1));g.addColorStop(1,mix(c,[40,20,0],.25));X.fillStyle=g}else X.fillStyle=col;
@@ -50,11 +50,11 @@ function btn(id,x,y,w,h,label,fn,o){o=o||{};UI.push({id,x,y,w,h,fn,always:o.alwa
  const round=w<=h*1.45;const hue=o.hue==null?42:o.hue;
  if(round){const d=Math.max(w,h)*1.18;dimg('btn_round',-d/2,-d/2,d,d,{grey:o.dis});
   if(label==='⌂'){const p=UA.pickaxe;if(okI(p)){const k=d*.5/p.naturalHeight;dimg('pickaxe',-p.naturalWidth*k/2,-p.naturalHeight*k/2,p.naturalWidth*k,p.naturalHeight*k)}}
-  else txt(label,0,2,o.fs||d*.42,'#ffe9a0',{st:'#2a0b4a',lw:(o.fs||d*.42)*.22})}
+  else txt(label,0,2,o.fs||d*.42,'#ffe9a0',{st:'#2a0b4a',lw:(o.fs||d*.42)*.22,maxW:d*.6})}
  else{const n=hue>=130&&hue<235?'btn_teal':'btn_purple';const hh=h*1.18,ww=w*1.12;win(n,-ww/2,-hh/2,ww,hh);
   // приглушаем кристалл под надписью нарисованным свитком, чтобы текст читался
   const fs=o.fs||Math.min(h*.5,34);X.save();X.globalAlpha*=.9;win('scroll_banner',-w*.36,-h*.3,w*.72,h*.6);X.restore();
-  txt(label,0,1,fs*.9,'#fff2c8',{st:'#3a1a08',lw:fs*.16})}
+  txt(label,0,1,Math.min(fs*.9,h*.62),'#fff2c8',{st:'#3a1a08',lw:fs*.16,maxW:w*.62})}
  X.restore()}
 // ---- звёзды, сердца, замок ----
 function star(x,y,r,on,sc){const s=(sc||1)*r*2.5;X.save();X.translate(x,y);if(on){X.save();X.globalCompositeOperation='lighter';X.globalAlpha*=.3+.1*Math.sin(T*4+x);dimg('star',-s*.65,-s*.65,s*1.3,s*1.3);X.restore()}
@@ -81,10 +81,10 @@ function drawParticles(){for(const p of PS){X.save();X.globalAlpha=Math.min(1,p.
  else{X.globalCompositeOperation='lighter';const s=p.s*(p.kind==='mote'?3.2:4.5);dimg('star',-s/2,-s/2,s,s)}
  X.restore()}}
 // ---- облачко речи: хрустальный пузырь ----
-function drawTalk(){if(!talk)return;const c=cast.find(c=>c.n===talk.who);const fs=26,lh=32;X.font=fs+'px '+FONT;const side=scene==='l3';const maxW=side?220:c?420:860;const L=wrap(talk.text,maxW);
- const tw=Math.max(...L.map(l=>X.measureText(l).width),c?X.measureText(NAMES[c.n][0]).width:0);const padX=side?40:58,padT=44,padB=74;const bw=side?312:Math.max(240,tw+padX*2),bh=L.length*lh+(c?34:0)+padT+padB;
+function drawTalk(){if(!talk)return;const c=cast.find(c=>c.n===talk.who);const fs=26,lh=32;X.font=fs+'px '+FONT;const side=scene==='l3';const maxW=side?200:c?420:860;const L=wrap(talk.text,maxW);
+ const tw=Math.max(...L.map(l=>X.measureText(l).width),c?X.measureText(NAMES[c.n][0]).width:0);const padX=side?40:58,padT=44,padB=74;const bw=side?280:Math.max(240,tw+padX*2),bh=L.length*lh+(c?34:0)+padT+padB;
  const age=T-talk.t0,pop=age<.18?.7+.3*ease(age/.18):1;let bx,by,flip=false;
- if(side){bx=962;by=86;flip=c&&c.x>640}else if(c){const hx2=c.x,hy=c.y-c.h*1.0-(c.jump&&T-c.jump<.75?50:0);flip=c.x>640;bx=flip?hx2-bw+40:hx2-40;bx=clamp(bx,4,1276-bw);by=Math.max(4,hy-bh+30)}else{bx=640-bw/2;by=8}
+ if(side){bx=996;by=70;flip=c&&c.x>640}else if(c){const hx2=c.x,hy=c.y-c.h*1.0-(c.jump&&T-c.jump<.75?50:0);flip=c.x>640;bx=flip?hx2-bw+40:hx2-40;bx=clamp(bx,4,1276-bw);by=Math.max(4,hy-bh+30)}else{bx=640-bw/2;by=8}
  X.save();const ox=flip?bx+bw*.85:bx+bw*.15;X.translate(ox,by+bh);X.scale(pop,pop);X.translate(-ox,-by-bh);
  win('bubble',bx,by,bw,bh,flip);
  let y0=by+padT;if(c){txt(NAMES[c.n][0],bx+padX,y0,24,NAMES[c.n][1],{al:'left',st:'#2a1240',lw:5});y0+=34}
