@@ -3,11 +3,24 @@
 const C=document.getElementById('c'),X=C.getContext('2d');
 let W=0,H=0,S=1,OX=0,OY=0,DPR=1,T=0,DT=0.016,shake=0,PX=640,PY=360,fade=1;
 function rs(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;C.width=Math.round(W*DPR);C.height=Math.round(H*DPR);S=Math.min(W/1280,H/720);OX=(W-1280*S)/2;OY=(H-720*S)/2}
-function vpWH(){const v=window.visualViewport;let w=innerWidth,h=innerHeight;if(v&&v.width>0){w=Math.round(v.width*(v.scale||1));h=Math.round(v.height*(v.scale||1))}const e=document.documentElement;return[w||e.clientWidth,h||e.clientHeight]}
-function rs(){DPR=Math.min(2,window.devicePixelRatio||1);[W,H]=vpWH();C.style.width=W+'px';C.style.height=H+'px';C.width=Math.round(W*DPR);C.height=Math.round(H*DPR);S=Math.min(W/1280,H/720);OX=(W-1280*S)/2;OY=(H-720*S)/2}
+// сцена = видимая область (visualViewport) + безопасные зоны (чёлка); страница не прокручивается
+const SAFE={l:0,t:0,r:0,b:0};let VVX=0,VVY=0;const _sp=document.createElement('div');_sp.style.cssText='position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';document.documentElement.appendChild(_sp);
+function vpWH(){const v=window.visualViewport;let w=innerWidth,h=innerHeight;VVX=0;VVY=0;if(v&&v.width>0){w=Math.round(v.width);h=Math.round(v.height);VVX=v.offsetLeft||0;VVY=v.offsetTop||0}const e=document.documentElement;return[w||e.clientWidth,h||e.clientHeight]}
+function rs(){DPR=Math.min(2,window.devicePixelRatio||1);if(window.scrollX||window.scrollY)window.scrollTo(0,0);[W,H]=vpWH();C.style.left=VVX+'px';C.style.top=VVY+'px';C.style.width=W+'px';C.style.height=H+'px';C.width=Math.round(W*DPR);C.height=Math.round(H*DPR);
+ const cs=getComputedStyle(_sp);SAFE.t=parseFloat(cs.paddingTop)||0;SAFE.r=parseFloat(cs.paddingRight)||0;SAFE.b=parseFloat(cs.paddingBottom)||0;SAFE.l=parseFloat(cs.paddingLeft)||0;
+ const aw=W-SAFE.l-SAFE.r,ah=H-SAFE.t-SAFE.b;S=Math.min(aw/1280,ah/720);OX=SAFE.l+(aw-1280*S)/2;OY=SAFE.t+(ah-720*S)/2}
+// полноэкранный режим (Android/desktop); iPhone — через «На экран Домой» (manifest + apple-mobile-web-app-capable)
+const FS_OK=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);const isFS=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+function goFS(){if(!FS_OK||isFS())return;const e=document.documentElement;try{const p=(e.requestFullscreen||e.webkitRequestFullscreen).call(e,{navigationUI:'hide'});const lk=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(_){}};if(p&&p.then)p.then(lk).catch(()=>{});else lk()}catch(_){}}
+function exitFS(){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(_){}}
+function toggleFS(){isFS()?exitFS():goFS()}
+const TOUCHDEV=('ontouchstart' in window)||navigator.maxTouchPoints>0;let _fsTried=false;
+addEventListener('pointerdown',()=>{if(TOUCHDEV&&!_fsTried&&!PORTRAIT()){_fsTried=true;goFS()}},true);
+document.addEventListener('fullscreenchange',()=>onOrient());document.addEventListener('webkitfullscreenchange',()=>onOrient());
+function fsButton(){if(!FS_OK||(scene!=='title'&&scene!=='map'))return;btn('fs',62,52,76,64,isFS()?'✕':'⛶',toggleFS,{always:1,fs:34})}
 let _lastW=-1,_lastH=-1,_wasP=null;function relayout(){rs();_lastW=W;_lastH=H;const p=PORTRAIT();if(_wasP!==p){_wasP=p;document.body.classList.toggle('portrait',p);if(!p){last=performance.now();if(AC&&AC.state==='suspended')AC.resume().catch(()=>{})}}}
 function onOrient(){relayout();[100,300,600].forEach(t=>setTimeout(relayout,t))}
-addEventListener('resize',onOrient);addEventListener('orientationchange',onOrient);addEventListener('pageshow',onOrient);document.addEventListener('visibilitychange',()=>{if(!document.hidden)onOrient()});
+addEventListener('resize',onOrient);addEventListener('orientationchange',onOrient);addEventListener('pageshow',onOrient);addEventListener('scroll',()=>{if(scrollX||scrollY)scrollTo(0,0)});document.addEventListener('visibilitychange',()=>{if(!document.hidden)onOrient()});
 if(screen.orientation&&screen.orientation.addEventListener)screen.orientation.addEventListener('change',onOrient);
 if(window.visualViewport){visualViewport.addEventListener('resize',onOrient);visualViewport.addEventListener('scroll',onOrient)}
 setInterval(()=>{const[w,h]=vpWH();if(w!==_lastW||h!==_lastH||PORTRAIT()!==_wasP)relayout()},500);rs();
@@ -76,11 +89,11 @@ function drawCast(){cast.forEach(drawHero)}
 // ---- сцены ----
 const SC={};let scene='title',SCN=null;
 function go(n,arg){scene=n;SCN=SC[n];fade=1;talk=null;if(skipTalk)skipTalk();SCN.enter&&SCN.enter(arg)}
-C.addEventListener('pointerdown',e=>{if(PORTRAIT())return;ac();const x=(e.clientX-OX)/S,y=(e.clientY-OY)/S;PX=x;PY=y;
+C.addEventListener('pointerdown',e=>{if(PORTRAIT())return;ac();const x=(e.clientX-VVX-OX)/S,y=(e.clientY-VVY-OY)/S;PX=x;PY=y;
  for(let i=UI.length-1;i>=0;i--){const b=UI[i];if(Math.abs(x-b.x)<b.w/2+6&&Math.abs(y-b.y)<b.h/2+6){if(b.dis||(G._busy&&!b.always))return;SFX.click();b.fn();return}}
  if(talk&&talk.box&&skipTalk){const[bx,by,bw,bh]=talk.box;if(x>bx&&x<bx+bw&&y>by&&y<by+bh){skipTalk();return}}
  if(SCN&&SCN.tap)SCN.tap(x,y)});
-C.addEventListener('pointermove',e=>{PX=(e.clientX-OX)/S;PY=(e.clientY-OY)/S});
+C.addEventListener('pointermove',e=>{PX=(e.clientX-VVX-OX)/S;PY=(e.clientY-VVY-OY)/S});
 let last=performance.now(),fpsA=60;
 const TOUCH=(('ontouchstart' in window)||navigator.maxTouchPoints>0)&&matchMedia('(pointer:coarse)').matches;const PORTRAIT=()=>TOUCH&&H>W*1.05;
 function loop(now){DT=PORTRAIT()?0:clamp((now-last)/1000,0,.05);last=now;T+=DT;fpsA=fpsA*.95+(1/Math.max(DT,.001))*.05;
@@ -88,7 +101,7 @@ function loop(now){DT=PORTRAIT()?0:clamp((now-last)/1000,0,.05);last=now;T+=DT;f
  const sx=(Math.random()-.5)*shake,sy=(Math.random()-.5)*shake;shake*=Math.pow(.004,DT);if(shake<.3)shake=0;
  X.setTransform(DPR*S,0,0,DPR*S,DPR*(OX+sx),DPR*(OY+sy));UI=[];stepParticles();
  try{SCN&&SCN.draw()}catch(e){console.error(e)}
- drawParticles();drawTalk();if(SCN&&SCN.ui)SCN.ui();
+ drawParticles();drawTalk();if(SCN&&SCN.ui)SCN.ui();fsButton();
  if(fade>0){const v=vis();X.fillStyle=`rgba(8,4,20,${fade})`;X.fillRect(v.x0,v.y0,v.w,v.h);fade=Math.max(0,fade-DT*2.5)}
  if(PORTRAIT())drawRotate();
  requestAnimationFrame(loop)}
