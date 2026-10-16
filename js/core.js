@@ -68,7 +68,7 @@ async function say1(k){const l=LINES[k];if(!l)return;const id=++SAYID;talk={who:
   if(v&&!G.mute){a=new Audio('assets/voice/'+v[0]);try{attachAnalyser(a)}catch(e){}a.onended=()=>setTimeout(fin,350);a.onerror=()=>setTimeout(fin,dur);let ok=true;try{await a.play()}catch(e){ok=false}
    if(done)return;if(ok)setTimeout(fin,(v[1]+2.5)*1000);else setTimeout(fin,dur)}else setTimeout(fin,dur)});
  if(talk&&talk.id===id)talk=null}
-async function run(fn){G._busy++;try{await fn()}catch(e){if(e!==STALE)console.error(e)}finally{G._busy--}}
+async function run(fn){G._busy++;try{await fn()}catch(e){if(e!==STALE)console.error(e)}finally{G._busy--;if(G._busy===0&&typeof LV!=='undefined'&&LV&&!LV.done)LV.lock=false}}
 // ---- частицы ----
 const PS=[];
 function burst(x,y,n,kind,hue,sp){sp=sp||1;for(let i=0;i<n;i++){const a=Math.random()*6.283,v=rnd(80,420)*sp;PS.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-(kind==='shard'?180:0),life:1,dec:rnd(.6,1.3),kind,hue:hue+rnd(-15,15),s:kind==='shard'?rnd(6,16):rnd(2,6),rot:rnd(0,6),vr:rnd(-10,10)})}}
@@ -101,17 +101,27 @@ function drawCast(){cast.forEach(drawHero)}
 // ---- сцены ----
 const SC={};let scene='title',SCN=null;
 function go(n,arg){try{if(typeof LV!=='undefined'&&LV&&n!=='secret'&&n!=='l'+LV.n)LV.resume=false}catch(e){}scene=n;SCN=SC[n];fade=1;stopTalk();PS.length=0;SCN.enter&&SCN.enter(arg)}
-C.addEventListener('pointerdown',e=>{if(PORTRAIT())return;ac();const x=(e.clientX-VVX-OX)/S,y=(e.clientY-VVY-OY)/S;PX=x;PY=y;
- for(let i=UI.length-1;i>=0;i--){const b=UI[i];if(Math.abs(x-b.x)<b.w/2+6&&Math.abs(y-b.y)<b.h/2+6){if(b.dis)return;if(G._busy&&!b.always){if(b.id==='hint'&&typeof LV!=='undefined'&&LV&&!LV.done&&typeof DEF!=='undefined'&&DEF[LV.n]&&DEF[LV.n].hint){SFX.click();stopTalk();LV.reveal=true;DEF[LV.n].hint(LV)}return}SFX.click();b.fn();return}}
- if(talk&&talk.box&&skipTalk){const[bx,by,bw,bh]=talk.box;if(x>bx&&x<bx+bw&&y>by&&y<by+bh){skipTalk();return}}
- if(SCN&&SCN.tap)SCN.tap(x,y)});
+// ввод (как в «Ярмарке» y7): блокируется только короткой победной сценой (LV.lock/SEC.lock); голос не мешает играть.
+// хит-зона >= 56 css px, из нескольких попаданий — ближайшая; повторный тап в то же место < 170 мс гасится
+function locked(){if(scene[0]==='l'&&typeof LV!=='undefined'&&LV)return!!(LV.lock||LV.done);if(scene==='secret'&&typeof SEC!=='undefined'&&SEC)return!!SEC.lock;return false}
+G.locked=locked;let _lastTap={t:0,x:-99,y:-99};
+function sayNow(k){stopTalk();say(k).catch(()=>{})}
+C.addEventListener('pointerdown',e=>{if(PORTRAIT())return;e.preventDefault();ac();const x=(e.clientX-VVX-OX)/S,y=(e.clientY-VVY-OY)/S;PX=x;PY=y;
+ const now=performance.now();if(now-_lastTap.t<170&&Math.hypot(e.clientX-_lastTap.x,e.clientY-_lastTap.y)<24)return;_lastTap={t:now,x:e.clientX,y:e.clientY};
+ const mh=28/S;let best=null,bd=1e9;
+ for(let i=UI.length-1;i>=0;i--){const b=UI[i];const dx=Math.abs(x-b.x),dy=Math.abs(y-b.y);if(dx<Math.max(b.w/2+6,mh)&&dy<Math.max(b.h/2+6,mh)){const ins=dx<b.w/2+6&&dy<b.h/2+6;const d=(ins?0:1e5)+Math.hypot(dx,dy);if(d<bd){bd=d;best=b}}}
+ if(best){const b=best;if(b.dis)return;if(locked()&&!b.always)return;SFX.click();b.fn();return}
+ if(talk&&talk.box&&skipTalk){const[bx,by,bw,bh]=talk.box;if(x>bx&&x<bx+bw&&y>by&&y<by+bh)skipTalk()}
+ if(SCN&&SCN.tap)SCN.tap(x,y)},{passive:false});
+['dblclick','contextmenu','gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 C.addEventListener('pointermove',e=>{PX=(e.clientX-VVX-OX)/S;PY=(e.clientY-VVY-OY)/S});
 let last=performance.now(),fpsA=60;
 const TOUCH=(('ontouchstart' in window)||navigator.maxTouchPoints>0)&&matchMedia('(pointer:coarse)').matches;const PORTRAIT=()=>TOUCH&&H>W*1.05;
 function loop(now){DT=PORTRAIT()?0:clamp((now-last)/1000,0,.05);last=now;T+=DT;fpsA=fpsA*.95+(1/Math.max(DT,.001))*.05;
  X.setTransform(DPR,0,0,DPR,0,0);X.clearRect(0,0,W,H);
  const sx=(Math.random()-.5)*shake,sy=(Math.random()-.5)*shake;shake*=Math.pow(.004,DT);if(shake<.3)shake=0;
- X.setTransform(DPR*S,0,0,DPR*S,DPR*(OX+sx),DPR*(OY+sy));UI=[];EXB_P=EXB;EXB={c:[],h:[]};stepParticles();
+ X.setTransform(DPR*S,0,0,DPR*S,DPR*(OX+sx),DPR*(OY+sy));UI=[];G.gnd_=[];EXB_P=EXB;EXB={c:[],h:[]};stepParticles();
  try{SCN&&SCN.draw()}catch(e){console.error(e)}
  drawParticles();if(SCN&&SCN.ui)SCN.ui();fsButton();PUI=UI.slice();drawTalk();
  if(fade>0){const v=vis();X.fillStyle=`rgba(8,4,20,${fade})`;X.fillRect(v.x0,v.y0,v.w,v.h);fade=Math.max(0,fade-DT*2.5)}
@@ -136,3 +146,5 @@ SC.load={draw(){const v=vis();const g=X.createLinearGradient(0,v.y0,0,v.y0+v.h);
 function startGame(){scene='load';SCN=SC.load;fade=0;requestAnimationFrame(loop);
  (document.fonts&&document.fonts.load?Promise.race([document.fonts.load('40px '+FONT),new Promise(r=>setTimeout(r,6000))]):Promise.resolve()).then(()=>{FONTOK=true});
  const chk=()=>{const t=performance.now()-LOADT0;if((loadFrac()>=1&&FONTOK&&t>500)||t>25000){LOADED=true;go('title')}else setTimeout(chk,100)};chk()}
+
+G.gnd=()=>({S,v:vis(),scene,items:G.gnd_||[]});
