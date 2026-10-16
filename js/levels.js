@@ -18,7 +18,7 @@ SC.intro={enter(){cast=[{n:'granit',x:190,y:730,h:440},{n:'iskorka',x:405,y:730,
  ui(){btn('skip',1180,50,170,60,'Дальше ›',()=>go('map'),{always:1,hue:200,fs:28})}};
 // ---------- карта ----------
 const MP=[[220,470],[440,360],[650,470],[860,360],[1070,450]];
-SC.map={enter(){cast=[{n:'iskorka',x:105,y:712,h:230}];if(!SV.seenMap){SV.seenMap=1;save();run(()=>say('map'))}},
+SC.map={enter(){cast=[{n:'iskorka',x:72,y:712,h:160}];if(!SV.seenMap){SV.seenMap=1;save();run(()=>say('map'))}},
  draw(){bgDraw('title',.35);motes(220);
   for(let i=1;i<MP.length;i++){const a={x:MP[i-1][0],y:MP[i-1][1]},b={x:MP[i][0],y:MP[i][1]};vine(bezPts(a,b,16),7,i<SV.open)}
   win('scroll_banner',430,22,420,96);txt('Карта пещеры',640,70,50,'#6a3410',{st:'rgba(255,245,215,.85)',lw:5});
@@ -221,7 +221,7 @@ SC.secret={enter(n){SEC={n,i:n-1,why:null};cast=[{n:'shester',x:140,y:735,h:330}
 function ansS(i){if(SEC.lock)return;const s=SECRETS[SEC.i];run(async()=>{if(i!==s.a){SFX.bad();oops('shester');SEC.why=s.why;sayNow('secw');return}
  SEC.lock=1;SEC.ok=1;SEC.why=s.why;SV.secret[SEC.i]=1;save();SFX.star();burst(640,330,50,'spark',320);burst(640,330,30,'shard',320);cheer();await say('secok');await wait(600);go('l'+SEC.n)})}
 // ---------- финал ----------
-SC.fin={enter(){cast=[{n:'granit',x:230,y:730,h:410},{n:'iskorka',x:450,y:730,h:380},{n:'shester',x:640,y:730,h:390},{n:'troll',x:1110,y:750,h:480,flip:1}];
+SC.fin={enter(){cast=[{n:'granit',x:230,y:730,h:410},{n:'iskorka',x:450,y:730,h:380},{n:'shester',x:640,y:730,h:390},{n:'troll',x:1135,y:750,h:400,flip:1}];
  run(async()=>{cheer();await say('fin');await say('l5end')})},
  draw(){bgDraw('title',.1);motes(48);if(Math.random()<.2)burst(rnd(100,1180),rnd(80,300),10,Math.random()<.5?'spark':'shard',rnd(0,360),.6);if(Math.random()<.01)cheer();
   win('scroll_banner',330,40,620,140);txt('Пещера спасена!',640,110,70,'#7a3a0a',{st:'rgba(255,245,215,.9)',lw:6});const st=SV.stars.reduce((a,b)=>a+b,0);for(let i=0;i<5;i++)star(520+i*60,205,22,true);win('sign',330,232,620,66);txt('Звёзд: '+st+' из 15 · редких кристаллов: '+SV.secret.reduce((a,b)=>a+b,0)+' из 4',640,266,26,'#ffe9b8',{st:'#2a1406',lw:4});drawCast()},
